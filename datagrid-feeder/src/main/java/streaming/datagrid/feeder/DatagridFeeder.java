@@ -30,17 +30,18 @@ public class DatagridFeeder extends AbstractVerticle {
             return resp.toObservable();
          })
          .subscribe(data -> {
-            String[] lines = data.toString("UTF-8").split("\\n");
-            for (String line : lines) {
-               if (!line.startsWith("train_id")) {
-                  String[] s = line.split("\\t");
-                  Train train = extractTrain(s);
-                  GeoLocation pos = extractPosition(s);
-                  // TODO: Add delay;
-                  TrainPosition trainPosition = new TrainPosition(train, pos, 0);
-                  System.out.println(trainPosition);
-               }
-            }
+            System.out.println(data);
+//            String[] lines = data.toString("UTF-8").split("\\n");
+//            for (String line : lines) {
+//               if (!line.startsWith("train_id")) {
+//                  String[] s = line.split("\\t");
+//                  Train train = extractTrain(s);
+//                  GeoLocation pos = extractPosition(s);
+//                  // TODO: Add delay;
+//                  TrainPosition trainPosition = new TrainPosition(train, pos, 0);
+//                  System.out.println(trainPosition);
+//               }
+//            }
          });
 
       // End request

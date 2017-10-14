@@ -74,12 +74,17 @@ class TrainCFFPositionDeserializer extends Deserializer[TrainCFFPosition] {
                 case s: String => Some(s.toDouble * 10)
               }
             )
-          )
+          ),
+          delay = (json \ "delay").toOption.map(_.as[String]).getOrElse("")
         ),
         futurePositions = (json \ "poly").as[List[PolyPos]].map(pp => TimedPosition(tStamp.plusMillis(pp.msec), pp.location))
       ))
     }
   }
+
+  //
+  //  def extractDelay(s: String): Int =
+  //    if (s.isEmpty) 0 else s.toInt
 
 }
 

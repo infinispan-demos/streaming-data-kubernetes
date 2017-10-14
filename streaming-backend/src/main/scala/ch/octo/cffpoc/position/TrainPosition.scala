@@ -8,7 +8,8 @@ import ch.octo.cffpoc.models.Train
 
 case class TrainPosition(
     train: Train,
-    timedPosition: HasTimedPosition) {
+    timedPosition: HasTimedPosition,
+    delay: String = "") {
   /**
    * instanciate a train copy with another time & position
    *
@@ -17,7 +18,8 @@ case class TrainPosition(
    */
   def at(newPosition: HasTimedPosition): TrainPosition = TrainPosition(
     train = train,
-    timedPosition = newPosition
+    timedPosition = newPosition,
+    delay = delay
   )
 
   override def toString = {
