@@ -75,7 +75,7 @@ class TrainCFFPositionDeserializer extends Deserializer[TrainCFFPosition] {
               }
             )
           ),
-          delay = (json \ "delay").toOption.map(_.as[String]).getOrElse("")
+          delay = (json \ "delay").toOption.map(_.as[String]).getOrElse("0")
         ),
         futurePositions = (json \ "poly").as[List[PolyPos]].map(pp => TimedPosition(tStamp.plusMillis(pp.msec), pp.location))
       ))

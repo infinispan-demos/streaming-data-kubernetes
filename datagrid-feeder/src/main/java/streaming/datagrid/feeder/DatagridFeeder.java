@@ -2,15 +2,22 @@ package streaming.datagrid.feeder;
 
 import io.vertx.rxjava.core.AbstractVerticle;
 import io.vertx.rxjava.core.Vertx;
+import io.vertx.rxjava.core.buffer.Buffer;
 import io.vertx.rxjava.core.http.HttpClient;
 import io.vertx.rxjava.core.http.HttpClientRequest;
+import rx.Observable;
 import streaming.data.model.GeoLocation;
 import streaming.data.model.Train;
 import streaming.data.model.TrainPosition;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import static io.vertx.core.http.HttpMethod.GET;
 
 public class DatagridFeeder extends AbstractVerticle {
+
+   private static final Logger log = Logger.getLogger(DatagridFeeder.class.getName());
 
    @Override
    public void start() throws Exception {
@@ -27,21 +34,27 @@ public class DatagridFeeder extends AbstractVerticle {
             if (resp.statusCode() != 200) {
                throw new RuntimeException("Wrong status code " + resp.statusCode());
             }
-            return resp.toObservable();
+            return Observable.just(Buffer.buffer()).mergeWith(resp.toObservable());
          })
+         .reduce(Buffer::appendBuffer) // Reduce all buffers in a single buffer
+         .map(buffer -> buffer.toString("UTF-8")) // Turn in to a string
          .subscribe(data -> {
-            System.out.println(data);
-//            String[] lines = data.toString("UTF-8").split("\\n");
-//            for (String line : lines) {
-//               if (!line.startsWith("train_id")) {
-//                  String[] s = line.split("\\t");
-//                  Train train = extractTrain(s);
-//                  GeoLocation pos = extractPosition(s);
-//                  // TODO: Add delay;
-//                  TrainPosition trainPosition = new TrainPosition(train, pos, 0);
-//                  System.out.println(trainPosition);
-//               }
-//            }
+            String[] lines = data.split("\\n");
+            //log.info("Received snapshot: " + data);
+            for (String line : lines) {
+               if (!line.startsWith("train_id")) {
+                  String[] s = line.split("\\t");
+                  //log.info("Line: " + line);
+                  //log.info("Length: " + s.length);
+                  Train train = extractTrain(s);
+                  GeoLocation pos = extractPosition(s);
+                  int delay = Integer.valueOf(s[7]);
+                  TrainPosition trainPosition = new TrainPosition(train, pos, delay);
+                  log.info("Train position: "  + trainPosition);
+               }
+            }
+         }, err -> {
+            log.log(Level.SEVERE, "Error", err);
          });
 
       // End request

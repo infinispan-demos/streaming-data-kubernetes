@@ -9,7 +9,7 @@ import ch.octo.cffpoc.models.Train
 case class TrainPosition(
     train: Train,
     timedPosition: HasTimedPosition,
-    delay: String = "") {
+    delay: String = "0") {
   /**
    * instanciate a train copy with another time & position
    *
