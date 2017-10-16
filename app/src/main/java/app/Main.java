@@ -1,6 +1,7 @@
 package app;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
@@ -28,6 +29,8 @@ public class Main extends AbstractVerticle {
 
         startFuture.handle(ar.mapEmpty());
       });
+
+    vertx.deployVerticle(Injector.class.getName(), new DeploymentOptions());
   }
 
   private void test(RoutingContext ctx) {
@@ -49,6 +52,8 @@ public class Main extends AbstractVerticle {
     ctx.response()
         .putHeader(CONTENT_TYPE, "application/json; charset=utf-8")
         .end(rsp.encodePrettily());
+
+    client.stop();
   }
 
 }
