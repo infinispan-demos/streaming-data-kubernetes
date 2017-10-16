@@ -65,6 +65,8 @@ public class Injector extends AbstractVerticle {
     rxReadGunzippedTextResource("cff-stop-2016-02-29__.jsonl.gz")
       .map(this::toEntry)
       .repeatWhen(observable -> {
+        // TODO: Is this working?
+        log.info("Reached end of file, clear and restart");
         stopsCache.clear(); // If it reaches the end of the file, start again
         return observable;
       })
