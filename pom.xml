@@ -21,8 +21,10 @@
    </properties>
 
    <modules>
-      <module>data-model</module>
-      <module>datagrid-feeder</module>
+      <module>dashboard</module>
+      <module>datagrid</module>
+      <module>feeder</module>
+      <module>model</module>
    </modules>
 
    <dependencyManagement>
