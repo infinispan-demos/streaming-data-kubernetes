@@ -17,11 +17,11 @@ import java.util.concurrent.Executors;
  * and uses continuous query to keep a centralised dashboard
  * of all the delays happening.
  */
-public class DelayedDashboard extends Application {
+public class Dashboard extends Application {
 
-  private final TableView<DelayedTrainView> table = new TableView<>();
+  private final TableView<View> table = new TableView<>();
   private final ExecutorService exec = Executors.newSingleThreadExecutor();
-  private DelayedDashboardTask task;
+  private WebsocketTask task;
 
   @Override
   public void start(Stage stage) {
@@ -43,9 +43,9 @@ public class DelayedDashboard extends Application {
 
     root.setCenter(table);
 
-    task = new DelayedDashboardTask();
-    SortedList<DelayedTrainView> sorted = new SortedList<>(
-      task.getPartialResults(), DelayedTrainView.comparator());
+    task = new WebsocketTask();
+    SortedList<View> sorted = new SortedList<>(
+      task.getPartialResults(), View.comparator());
     table.setItems(sorted);
     task.exceptionProperty().addListener((observable, oldValue, newValue) ->  {
       if(newValue != null) {
@@ -67,7 +67,7 @@ public class DelayedDashboard extends Application {
   }
 
   private TableColumn getTableCol(String colName, int minWidth, String fieldName) {
-    TableColumn<DelayedTrainView, String> typeCol = new TableColumn<>(colName);
+    TableColumn<View, String> typeCol = new TableColumn<>(colName);
     typeCol.setMinWidth(minWidth);
     typeCol.setCellValueFactory(new PropertyValueFactory<>(fieldName));
     return typeCol;

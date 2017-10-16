@@ -18,6 +18,8 @@
     <infinispan.version>9.1.1.Final</infinispan.version>
     <vertx-maven-plugin.version>1.0.6</vertx-maven-plugin.version>
 
+    <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
+
     <vertx.verticle>app.Main</vertx.verticle>
   </properties>
 
@@ -45,6 +47,7 @@
       <plugins>
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
+          <version>${maven-compiler-plugin.version}</version>
           <configuration>
             <source>1.8</source>
             <target>1.8</target>

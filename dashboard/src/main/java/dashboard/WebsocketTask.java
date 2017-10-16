@@ -9,18 +9,18 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 
-public class DelayedDashboardTask extends Task<Void> {
+public class WebsocketTask extends Task<Void> {
 
-  static final String HTTP_HOST = System.getProperty("http.host", "station-boards-injector-myproject.127.0.0.1.nip.io");
+  static final String HTTP_HOST = System.getProperty("http.host", "app-myproject.127.0.0.1.nip.io");
   static final int HTTP_PORT = Integer.getInteger("http.port", 80);
 
-  private ObservableList<DelayedTrainView> partialResults =
+  private ObservableList<View> partialResults =
     FXCollections.observableArrayList();
 
   private Vertx vertx = Vertx.vertx();
   private HttpClient client = vertx.createHttpClient();
 
-  public final ObservableList<DelayedTrainView> getPartialResults() {
+  public final ObservableList<View> getPartialResults() {
     return partialResults;
   }
 
@@ -49,7 +49,7 @@ public class DelayedDashboardTask extends Task<Void> {
         JsonObject json = new JsonObject(new JsonObject(buff.toString()).getString("body"));
 
         Platform.runLater(() ->
-          partialResults.add(new DelayedTrainView(json.getString("type"),
+          partialResults.add(new View(json.getString("type"),
             json.getString("departure"),
             json.getString("station"),
             json.getString("destination"),

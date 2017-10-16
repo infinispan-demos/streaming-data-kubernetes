@@ -54,13 +54,13 @@ public class Injector extends AbstractVerticle {
 
   @Override
   public void stop() throws Exception {
-    if (client != null) {
-      client.getCache().clear();
+    if (client != null)
       client.stop();
-    }
   }
 
   private void inject(RemoteCache<String, Stop> stopsCache) {
+    stopsCache.clear(); // Remove data on start, to start clean
+
     vertx.setPeriodic(5000L, l -> {
       vertx.executeBlocking(fut -> {
         log.info(String.format("Progress: stored=%d%n", stopsCache.size()));

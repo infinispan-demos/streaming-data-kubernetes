@@ -4,7 +4,7 @@ import javafx.beans.property.SimpleStringProperty;
 
 import java.util.Comparator;
 
-public class DelayedTrainView {
+public class View {
 
   private final SimpleStringProperty type;
   private final SimpleStringProperty departure;
@@ -13,7 +13,7 @@ public class DelayedTrainView {
   private final SimpleStringProperty delay;
   private final SimpleStringProperty trainName;
 
-  public DelayedTrainView(String type,
+  public View(String type,
     String departure,
     String station,
     String destination,
@@ -99,14 +99,14 @@ public class DelayedTrainView {
     this.trainName.set(trainName);
   }
 
-  public static Comparator<DelayedTrainView> comparator() {
+  public static Comparator<View> comparator() {
     return new DepatureComparator();
   }
 
-  static final class DepatureComparator implements Comparator<DelayedTrainView> {
+  static final class DepatureComparator implements Comparator<View> {
 
     @Override
-    public int compare(DelayedTrainView o1, DelayedTrainView o2) {
+    public int compare(View o1, View o2) {
       return o2.getDeparture().compareTo(o1.getDeparture());
     }
 
