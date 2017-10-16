@@ -1,24 +1,17 @@
 package app;
 
-import app.model.Station;
 import app.model.Stop;
-import app.model.Train;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.AbstractVerticle;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.Search;
-import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
-import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
-import org.infinispan.protostream.FileDescriptorSource;
-import org.infinispan.protostream.SerializationContext;
 import org.infinispan.query.api.continuous.ContinuousQuery;
 import org.infinispan.query.api.continuous.ContinuousQueryListener;
 import org.infinispan.query.dsl.QueryFactory;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -26,6 +19,7 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+import static app.AppUtils.createRemoteCacheManager;
 import static org.infinispan.query.remote.client.ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME;
 
 public class Listener extends AbstractVerticle {
@@ -96,28 +90,7 @@ public class Listener extends AbstractVerticle {
       client.stop();
   }
 
-  // TODO: Duplicate
-  static RemoteCacheManager createRemoteCacheManager() {
-    RemoteCacheManager client = new RemoteCacheManager(
-      new ConfigurationBuilder().addServer()
-        .host("datagrid-hotrod")
-        .port(11222)
-        .marshaller(ProtoStreamMarshaller.class)
-        .build());
-
-    SerializationContext ctx = ProtoStreamMarshaller.getSerializationContext(client);
-    try {
-      ctx.registerProtoFiles(FileDescriptorSource.fromResources("app-model.proto"));
-      ctx.registerMarshaller(new Stop.Marshaller());
-      ctx.registerMarshaller(new Station.Marshaller());
-      ctx.registerMarshaller(new Train.Marshaller());
-      return client;
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  static String toJson(Stop stop) {
+  private static String toJson(Stop stop) {
     Map<String, Object> map = new HashMap<>();
     map.put("type", stop.train.getCategory());
     map.put("departure", String.format("%tR", stop.departureTs));
@@ -128,7 +101,7 @@ public class Listener extends AbstractVerticle {
     return new JsonObject(map).encode();
   }
 
-  static String readInputStream(InputStream is) {
+  private static String readInputStream(InputStream is) {
     try {
       try {
         final Reader reader = new InputStreamReader(is, "UTF-8");

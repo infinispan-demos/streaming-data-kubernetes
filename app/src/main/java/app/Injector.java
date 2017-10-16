@@ -8,17 +8,12 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.AbstractVerticle;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
-import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
-import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
-import org.infinispan.protostream.FileDescriptorSource;
-import org.infinispan.protostream.SerializationContext;
 import rx.Observable;
 import rx.functions.Actions;
 import rx.observables.StringObservable;
 import rx.schedulers.Schedulers;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -31,6 +26,7 @@ import java.util.Objects;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 
+import static app.AppUtils.createRemoteCacheManager;
 import static java.util.logging.Level.SEVERE;
 
 public class Injector extends AbstractVerticle {
@@ -43,9 +39,7 @@ public class Injector extends AbstractVerticle {
   public void start(Future<Void> startFuture) throws Exception {
     vertx.<RemoteCacheManager>rxExecuteBlocking(fut -> fut.complete(createRemoteCacheManager()))
       .doOnSuccess(rcm -> client = rcm)
-      //.<Void>map(x -> null)
       .flatMap(v -> vertx.<RemoteCache<String, Stop>>rxExecuteBlocking(fut -> fut.complete(client.getCache())))
-      //.doOnSuccess(remoteCache -> stopsCache = remoteCache).<Void>map(x -> null)
       .subscribe(cache -> {
         startFuture.complete(null);
         inject(cache);
@@ -70,45 +64,16 @@ public class Injector extends AbstractVerticle {
 
     rxReadGunzippedTextResource("cff-stop-2016-02-29__.jsonl.gz")
       .map(this::toEntry)
-//      .doAfterTerminate(() -> {
-//        final long duration = System.nanoTime() - loadStart;
-//        log.info(String.format(
-//          "Duration: %d(s) %n", TimeUnit.NANOSECONDS.toSeconds(duration)
-//        ));
-//        loadStart = System.nanoTime();
-//        stopsLoaded.set(0);
-//      })
       .repeatWhen(observable -> {
         stopsCache.clear(); // If it reaches the end of the file, start again
         return observable;
       })
       .doOnNext(entry -> stopsCache.put(entry.getKey(), entry.getValue()))
-      //.doOnNext(entry -> stopsLoaded.incrementAndGet())
       .subscribe(Actions.empty(),
         t -> log.log(SEVERE, "Error while loading station boards", t));
   }
 
-  private RemoteCacheManager createRemoteCacheManager() {
-    RemoteCacheManager client = new RemoteCacheManager(
-      new ConfigurationBuilder().addServer()
-        .host("datagrid-hotrod")
-        .port(11222)
-        .marshaller(ProtoStreamMarshaller.class)
-        .build());
-
-    SerializationContext ctx = ProtoStreamMarshaller.getSerializationContext(client);
-    try {
-      ctx.registerProtoFiles(FileDescriptorSource.fromResources("app-model.proto"));
-      ctx.registerMarshaller(new Stop.Marshaller());
-      ctx.registerMarshaller(new Station.Marshaller());
-      ctx.registerMarshaller(new Train.Marshaller());
-      return client;
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  public static Observable<String> rxReadGunzippedTextResource(String resource) {
+  private static Observable<String> rxReadGunzippedTextResource(String resource) {
     Objects.requireNonNull(resource);
     URL url = Injector.class.getClassLoader().getResource(resource);
     Objects.requireNonNull(url);
@@ -153,7 +118,7 @@ public class Injector extends AbstractVerticle {
   }
 
   @SuppressWarnings("unchecked")
-  static <T> T orNull(Object obj, T defaultValue) {
+  private static <T> T orNull(Object obj, T defaultValue) {
     return Objects.isNull(obj) ? defaultValue : (T) obj;
   }
 
