@@ -78,7 +78,10 @@ public class Injector extends AbstractVerticle {
 //        loadStart = System.nanoTime();
 //        stopsLoaded.set(0);
 //      })
-      .repeat()
+      .repeatWhen(observable -> {
+        stopsCache.clear(); // If it reaches the end of the file, start again
+        return observable;
+      })
       .doOnNext(entry -> stopsCache.put(entry.getKey(), entry.getValue()))
       //.doOnNext(entry -> stopsLoaded.incrementAndGet())
       .subscribe(Actions.empty(),

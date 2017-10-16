@@ -40,7 +40,7 @@ public class Main extends AbstractVerticle {
       });
 
     vertx.deployVerticle(Injector.class.getName(), new DeploymentOptions());
-    vertx.deployVerticle(ContinuousQuery.class.getName(), new DeploymentOptions());
+    vertx.deployVerticle(Listener.class.getName(), new DeploymentOptions());
   }
 
   private Handler<RoutingContext> sockJSHandler() {
