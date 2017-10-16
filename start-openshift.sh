@@ -9,6 +9,3 @@ cd infinispan-openshift-templates
 git checkout streaming_data_workshop
 make stop-openshift
 make start-openshift-with-catalog install-templates)
-
-(cd ./datagrid; ./deploy.sh)
-(cd ./feeder; ./deploy.sh)
