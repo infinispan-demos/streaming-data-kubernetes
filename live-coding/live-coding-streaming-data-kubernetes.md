@@ -37,13 +37,21 @@ Verify OpenShift is running
 ## Create Infinispan data grid<a id="sec-2-1" name="sec-2-1"></a>
 
 Open <https://127.0.0.1:8443/> in Chrome
+
 Log in as usr/pwd developer/developer
+
 Click \`Infinispan Ephemeral\`
+
 Explain differences between Ephemeral and Persistent
+
 Change app name to \`datagrid\`
+
 Change management usr/pwd to developer/developer
+
 Change number of instances to 3
+
 Click Next
+
 Do not create binding and click Create
 
 ## Start Visualizer<a id="sec-2-2" name="sec-2-2"></a>
@@ -136,7 +144,9 @@ Redeploy the app
     oc start-build app --from-dir=. --follow
 
 Switch visualizer to default cache
+
 Switch to terminal and make sure visualizer is in background
+
 From terminal, start the injector invoking:
 
     curl http://app-myproject.127.0.0.1.nip.io/inject
@@ -180,6 +190,7 @@ Redeploy the app
     oc start-build app --from-dir=. --follow
 
 Switch to terminal and make sure visualizer is in background
+
 From terminal, start the injector invoking:
 
     curl http://app-myproject.127.0.0.1.nip.io/inject
