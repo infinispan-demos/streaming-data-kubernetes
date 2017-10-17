@@ -3,6 +3,7 @@ package app;
 import app.model.Stop;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
+import io.vertx.rx.java.RxHelper;
 import io.vertx.rxjava.core.AbstractVerticle;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
@@ -35,13 +36,11 @@ public class Listener extends AbstractVerticle {
       .doOnSuccess(rcm -> client = rcm)
       .flatMap(x -> vertx.rxExecuteBlocking(fut -> fut.complete(addModelToServer())))
       .flatMap(v -> vertx.<RemoteCache<String, Stop>>rxExecuteBlocking(fut -> fut.complete(client.getCache())))
-      .subscribe(cache -> {
-        startFuture.complete(null);
-        addContinuousQuery(cache);
-      }, startFuture::fail);
+      .flatMap(cache -> vertx.<Void>rxExecuteBlocking(fut -> fut.complete(addContinuousQuery(cache))))
+      .subscribe(RxHelper.toSubscriber(startFuture));
   }
 
-  private void addContinuousQuery(RemoteCache<String, Stop> stopsCache) {
+  private Void addContinuousQuery(RemoteCache<String, Stop> stopsCache) {
     QueryFactory qf = Search.getQueryFactory(stopsCache);
 
     org.infinispan.query.dsl.Query query = qf.from(Stop.class)
@@ -68,9 +67,11 @@ public class Listener extends AbstractVerticle {
 
     continuousQuery = Search.getContinuousQuery(stopsCache);
     continuousQuery.addContinuousQueryListener(query, listener);
+
+    return null;
   }
 
-  private Object addModelToServer() {
+  private Void addModelToServer() {
     InputStream is = getClass().getResourceAsStream("/app-model.proto");
     RemoteCache<String, String> metaCache = client.getCache(PROTOBUF_METADATA_CACHE_NAME);
     metaCache.put("app-model.proto", readInputStream(is));
