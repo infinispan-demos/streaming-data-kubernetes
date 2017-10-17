@@ -1,7 +1,7 @@
 package app;
 
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.DeploymentOptions;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
@@ -34,17 +34,27 @@ public class Main extends AbstractVerticle {
     vertx.createHttpServer()
       .requestHandler(router::accept)
       .listen(8080, ar -> {
-        if (ar.succeeded())
+        if (ar.succeeded()) {
           System.out.println("Server started");
-
-        startFuture.handle(ar.mapEmpty());
+          startFuture.complete();
+        } else {
+          startFuture.fail(ar.cause());
+        }
       });
   }
 
   private void inject(RoutingContext ctx) {
-    vertx.deployVerticle(Injector.class.getName(), new DeploymentOptions());
-    vertx.deployVerticle(Listener.class.getName(), new DeploymentOptions());
-    ctx.response().end("Injector started");
+    Future<String> injectorFuture = Future.future();
+    vertx.deployVerticle(Injector.class.getName(), injectorFuture);
+    Future<String> listenerFuture = Future.future();
+    vertx.deployVerticle(Listener.class.getName(), listenerFuture);
+    CompositeFuture.all(injectorFuture, listenerFuture).setHandler(ar -> {
+      if (ar.succeeded()) {
+        ctx.response().end("Injector started");
+      } else {
+        ctx.fail(ar.cause());
+      }
+    });
   }
 
   private Handler<RoutingContext> sockJSHandler() {
