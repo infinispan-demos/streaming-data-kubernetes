@@ -8,6 +8,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.AbstractVerticle;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
+import rx.Notification;
 import rx.Observable;
 import rx.functions.Actions;
 import rx.observables.StringObservable;
@@ -64,12 +65,11 @@ public class Injector extends AbstractVerticle {
 
     rxReadGunzippedTextResource("cff-stop-2016-02-29__.jsonl.gz")
       .map(this::toEntry)
-      .repeatWhen(observable -> {
-        // TODO: Is this working?
+      .repeatWhen(notification -> notification.map(terminal -> {
         log.info("Reached end of file, clear and restart");
         stopsCache.clear(); // If it reaches the end of the file, start again
-        return observable;
-      })
+        return Notification.createOnNext(null);
+      }))
       .doOnNext(entry -> stopsCache.put(entry.getKey(), entry.getValue()))
       .subscribe(Actions.empty(),
         t -> log.log(SEVERE, "Error while loading station boards", t));

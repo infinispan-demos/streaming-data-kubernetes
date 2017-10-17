@@ -62,11 +62,11 @@ public class Main extends AbstractVerticle {
         .host("datagrid-hotrod")
         .port(11222).build());
 
-    client.getCache().put("hello", "world");
-    Object value = client.getCache().get("hello");
+    client.getCache("repl").put("hello", "world");
+    Object value = client.getCache("repl").get("hello");
 
     Set<SocketAddress> topology =
-      client.getCache().getCacheTopologyInfo().getSegmentsPerServer().keySet();
+      client.getCache("repl").getCacheTopologyInfo().getSegmentsPerServer().keySet();
 
     JsonObject rsp = new JsonObject()
       .put("get", value)
