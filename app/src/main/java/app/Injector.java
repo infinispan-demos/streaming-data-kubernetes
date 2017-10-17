@@ -24,6 +24,7 @@ import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Date;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 
@@ -70,6 +71,7 @@ public class Injector extends AbstractVerticle {
         stopsCache.clear(); // If it reaches the end of the file, start again
         return Notification.createOnNext(null);
       }))
+      .zipWith(Observable.interval(10, TimeUnit.MILLISECONDS), (item, interval) -> item)
       .doOnNext(entry -> stopsCache.put(entry.getKey(), entry.getValue()))
       .subscribe(Actions.empty(),
         t -> log.log(SEVERE, "Error while loading station boards", t));
