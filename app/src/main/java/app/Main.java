@@ -28,6 +28,7 @@ public class Main extends AbstractVerticle {
   public void start(Future<Void> startFuture) throws Exception {
     Router router = Router.router(vertx);
     router.get("/test").handler(this::test);
+    router.get("/inject").handler(this::inject);
     router.route("/eventbus/*").handler(this.sockJSHandler());
 
     vertx.createHttpServer()
@@ -38,9 +39,12 @@ public class Main extends AbstractVerticle {
 
         startFuture.handle(ar.mapEmpty());
       });
+  }
 
+  private void inject(RoutingContext ctx) {
     vertx.deployVerticle(Injector.class.getName(), new DeploymentOptions());
     vertx.deployVerticle(Listener.class.getName(), new DeploymentOptions());
+    ctx.response().end("Injector started");
   }
 
   private Handler<RoutingContext> sockJSHandler() {
