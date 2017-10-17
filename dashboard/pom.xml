@@ -13,7 +13,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <vertx.version>3.4.1</vertx.version>
+    <vertx.version>3.4.2</vertx.version>
   </properties>
 
   <dependencyManagement>
