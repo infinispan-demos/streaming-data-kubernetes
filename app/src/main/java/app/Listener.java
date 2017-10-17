@@ -30,6 +30,7 @@ public class Listener extends AbstractVerticle {
   @Override
   public void start(Future<Void> startFuture) throws Exception {
     // TODO: Do I need Rx here?
+    // TSE: you don't, but Rx makes coordinating async code easier
     vertx.<RemoteCacheManager>rxExecuteBlocking(fut -> fut.complete(createRemoteCacheManager()))
       .doOnSuccess(rcm -> client = rcm)
       .flatMap(x -> vertx.rxExecuteBlocking(fut -> fut.complete(addModelToServer())))
