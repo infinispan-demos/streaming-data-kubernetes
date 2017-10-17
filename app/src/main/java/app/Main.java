@@ -27,7 +27,7 @@ public class Main extends AbstractVerticle {
   @Override
   public void start(Future<Void> startFuture) throws Exception {
     Router router = Router.router(vertx);
-    router.get("/test").handler(this::test);
+    router.get("/test").blockingHandler(this::test);
     router.get("/inject").handler(this::inject);
     router.route("/eventbus/*").handler(this.sockJSHandler());
 
