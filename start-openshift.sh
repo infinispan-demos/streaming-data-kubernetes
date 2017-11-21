@@ -14,4 +14,3 @@ oc adm policy add-cluster-role-to-group system:openshift:templateservicebroker-c
 oc create -f openshift/infinispan-centos7-imagestream.json || true
 oc create -f openshift/infinispan-persistent-template.json || true
 oc create -f openshift/infinispan-ephemeral-template.json || true
-oc import-image is/infinispan || true
