@@ -6,7 +6,11 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.rxjava.core.AbstractVerticle;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
+import org.infinispan.client.hotrod.Search;
 import org.infinispan.query.api.continuous.ContinuousQuery;
+import org.infinispan.query.api.continuous.ContinuousQueryListener;
+import org.infinispan.query.dsl.Query;
+import org.infinispan.query.dsl.QueryFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +34,7 @@ public class Listener extends AbstractVerticle {
   }
 
   private void addContinuousQuery(RemoteCache<String, Stop> stopsCache) {
-    // TODO: live code
+    // TODO - live code
   }
 
   @Override

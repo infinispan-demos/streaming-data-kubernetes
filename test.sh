@@ -2,7 +2,7 @@
 
 set -e -x
 
-./start-openshift.sh
+./start-local-openshift.sh
 
 APP=datagrid
 USR=developer
@@ -22,12 +22,7 @@ oc process -n openshift infinispan-ephemeral -p \
 
 # Deploy app
 cd app
-oc project myproject
-oc new-build --binary --name=app
-mvn clean package
-oc start-build app --from-dir=. --follow
-oc new-app app
-oc expose service app
+mvn fabric8:deploy
 
 # TODO: Wait until curl returns success
 

@@ -5,7 +5,7 @@ The aim of the demo is to show how to use OpenShift, together with Vert.x and In
 
 # Pre-requisites
 
-* OpenShift Origin 1.6
+* OpenShift Origin 3.7
 * Docker 1.13.1 (recommended, but should work with higher versions too)
 * Maven 3
 
@@ -13,18 +13,12 @@ This demo could be run alternatively using [Minishift](https://www.openshift.org
 
 # Running Demo
 
-Start by running OpenShift by executing the `start-openshift.sh` script at the root of this demo:
+Start by running OpenShift by executing the `start-local-openshift.sh` script at the root of this demo:
 
-    ./start-openshift.sh
+    ./start-local-openshift.sh
 
 This script starts OpenShift together with the service catalog, and installs Infinispan ephemeral and persistent templates. 
 Infinispan ephemeral stores all data in memory and persistent template provides persistent volume for the data as well as storing it in memory. 
-
-When you start OpenShift using that script, you might encounter error messages like this at the end:
-
-    Error from server (Conflict): Operation cannot be fulfilled on imagestream.image.openshift.io "infinispan": the image stream was updated from "1382" to "1398" 
-
-This error does not appear to affect the behaviour of the demo.
 
 Next, head to OpenShift Console in [https://127.0.0.1:8443/console](https://127.0.0.1:8443/console) from Chrome.
 
@@ -51,12 +45,7 @@ Verify the visualizer shows 3 nodes via  [http://visual-myproject.127.0.0.1.nip.
 Next, build and deploy the main application:
 
     cd app
-    oc project myproject
-    oc new-build --binary --name=app
-    mvn clean package
-    oc start-build app --from-dir=. --follow
-    oc new-app app
-    oc expose service app
+    mvn fabric8:deploy
 
 Go to the visualizer and switch to `repl` cache. 
 
