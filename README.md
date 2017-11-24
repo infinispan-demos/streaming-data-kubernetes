@@ -111,6 +111,9 @@ You can do this by calling `start-gcp-openshift.sh` script:
 
     ./start-gcp-openshift.sh <openshift-master-IP-address> cluster-streaming
 
+This script connects to the OpenShift cluster and installs Infinispan ephemeral template.
+Infinispan ephemeral stores all data in memory.
+
 
 # Paths and URLs
 
