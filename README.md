@@ -135,6 +135,7 @@ It is recommended that you use Google Chrome or Firefox for accessing it.
 When running on Google, use these paths or URLS for accessing components: 
 
 * OpenShift Console: [https://console.cluster-streaming.<openshift-master-ip>.nip.io:8443/console](https://console.cluster-streaming.<openshift-master-IP-address>.nip.io:8443/console)
+
   * It is recommended that you use Google Chrome or Firefox for accessing it.
 
 * Infinispan visualizer: [http://visual-myproject.apps.cluster-streaming.<openshift-master-ip>.nip.io/infinispan-visualizer](http://visual-myproject.apps.cluster-streaming.<<openshift-master-ip>>.nip.io/infinispan-visualizer)  
