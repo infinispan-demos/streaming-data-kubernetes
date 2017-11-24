@@ -3,7 +3,7 @@
 set -e -x
 
 OPENSHIFT_MASTER=$1
-OPENSHIFT_NAME=cluster-streaming-v2
+OPENSHIFT_NAME=$2
 OPENSHIFT_URL=https://console.${OPENSHIFT_NAME}.${OPENSHIFT_MASTER}.nip.io:8443
 
 oc login -u developer -p developer ${OPENSHIFT_URL}
