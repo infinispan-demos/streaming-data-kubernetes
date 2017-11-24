@@ -122,7 +122,8 @@ Infinispan ephemeral stores all data in memory.
 When running in a local environment, use these paths or URLS for accessing components: 
 
 * OpenShift Console: [https://127.0.0.1:8443/console](https://127.0.0.1:8443/console)
-It is recommended that you use Google Chrome or Firefox for accessing it.
+
+  * It is recommended that you use Google Chrome or Firefox for accessing it.
 
 * Infinispan visualizer: [http://visual-myproject.127.0.0.1.nip.io/infinispan-visualizer](http://visual-myproject.127.0.0.1.nip.io/infinispan-visualizer)  
 
