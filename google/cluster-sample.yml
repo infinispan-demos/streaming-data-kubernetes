@@ -1,0 +1,50 @@
+name: cluster-sample
+provider: gce
+type: origin
+release: v3.7
+installer: ocu
+
+dns:
+  provider: nip
+
+
+ssh:
+  key: openshift-key
+
+
+components:
+  cockpit: false
+  metrics: false
+  logging: true
+  pvs: false
+  servicecatalog: true
+
+
+users:
+  - username: admin
+    password: jboss123
+    admin: true
+
+
+pvs: # PVs always use hostPath
+  type: '' # if set to "gluster" will deploy gluster node and setup the hostPath into Gluster backed directory
+  size: 1 # Size of the generated PVs in GB
+  count: 1 # Generate 1 PV
+
+
+nodes:
+  count: 1 # container nodes in the cluster
+  infra: false # separate master and infra
+  podsPerCore: 10 # how many pods can be on a node per core
+  type: n1-standard-4 # See a list of machine types: https://cloud.google.com/compute/docs/machine-types
+  disk:
+    boot: 50   # The boot disk in GB
+    docker: 50 # The docker storage disk in GB
+
+
+gce:
+  account: <google-cloud-project-name>.json
+  # See a list of regions & zones: https://cloud.google.com/compute/docs/regions-zones/regions-zones
+  region: europe-west2
+  zone: europe-west2-b
+  project: <google-cloud-project-name>
