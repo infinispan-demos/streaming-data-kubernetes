@@ -78,7 +78,7 @@ e.g.
 
 ## Login with OpenShift client to Google Cloud<a id="sec-3-3" name="sec-3-3"></a>
 
-    ./start-gcp-openshift.sh <openshift-master-ip> cluster-streaming
+    ./setup-gcp-openshift.sh <openshift-master-ip> cluster-streaming
 
 # Live Coding<a id="sec-4" name="sec-4"></a>
 

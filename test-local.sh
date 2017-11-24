@@ -2,7 +2,7 @@
 
 set -e -x
 
-./start-local-openshift.sh
+setup-local-openshift.sh
 
 APP=datagrid
 USR=developer

@@ -29,9 +29,9 @@ Once again, the set up varies depending on your target environment:
 
 ## Local set up
 
-Start OpenShift by executing the `start-local-openshift.sh` script at the root of this demo:
+Start OpenShift by executing the `setup-local-openshift.sh` script at the root of this demo:
 
-    ./start-local-openshift.sh
+    ./setup-local-openshift.sh
 
 This script starts OpenShift together with the service catalog, and installs Infinispan ephemeral template. 
 Infinispan ephemeral stores all data in memory.
@@ -107,9 +107,9 @@ In case you get any errors when destroying the cluster, you can fully remove all
     ./delete-resources.sh cluster-streaming
 
 Once you have your OpenShift cluster running, the Infinispan template needs to be installed.
-You can do this by calling `start-gcp-openshift.sh` script:
+You can do this by calling `setup-gcp-openshift.sh` script:
 
-    ./start-gcp-openshift.sh <openshift-master-IP-address> cluster-streaming
+    ./setup-gcp-openshift.sh <openshift-master-IP-address> cluster-streaming
 
 This script connects to the OpenShift cluster and installs Infinispan ephemeral template.
 Infinispan ephemeral stores all data in memory.
