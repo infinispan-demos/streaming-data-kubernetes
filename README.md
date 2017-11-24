@@ -74,7 +74,7 @@ The simplest thing is to create one in the folder where the OpenShift cluster de
 
 Finally, you need to missing details to OpenShift cluster definition file.
 This project contains a sample descriptor called 
-[cluster-sample.yml](google/cluster-sample.yml)
+[cluster-streaming.yml](google/cluster-streaming.yml)
 which you can use as starting point.
 It already assumes that the SSH key is called `openshift-key`.
 Using that file, the missing details to add are:
@@ -96,20 +96,20 @@ Finally, you need to call create on
 project to create an OpenShift cluster with the details of YAML file.
 Assuming you're calling `create` from the same directory where the YAML and SSH key files are located, this would be:
 
-    docker run -e -ti -v `pwd`:/root/data docker.io/osevg/openshifter create cluster-sample
+    docker run -e -ti -v `pwd`:/root/data docker.io/osevg/openshifter create cluster-streaming
 
 If you get any errors, you can destroy the OpenShift cluster executing:
 
-    docker run -e -ti -v `pwd`:/root/data docker.io/osevg/openshifter destroy cluster-sample
+    docker run -e -ti -v `pwd`:/root/data docker.io/osevg/openshifter destroy cluster-streaming
 
 In case you get any errors when destroying the cluster, you can fully remove all the elements by doing:
 
-    ./delete-resources.sh cluster-sample
+    ./delete-resources.sh cluster-streaming
 
 Once you have your OpenShift cluster running, the Infinispan template needs to be installed.
 You can do this by calling `start-gcp-openshift.sh` script:
 
-    ./start-gcp-openshift.sh <openshift-master-IP-address> cluster-sample
+    ./start-gcp-openshift.sh <openshift-master-IP-address> cluster-streaming
 
 
 # Paths and URLs
@@ -131,14 +131,14 @@ It is recommended that you use Google Chrome or Firefox for accessing it.
 
 When running on Google, use these paths or URLS for accessing components: 
 
-* OpenShift Console: [https://console.cluster-sample.<openshift-master-ip>.nip.io:8443/console](https://console.cluster-sample.<openshift-master-IP-address>.nip.io:8443/console).
+* OpenShift Console: [https://console.cluster-streaming.<openshift-master-ip>.nip.io:8443/console](https://console.cluster-streaming.<openshift-master-IP-address>.nip.io:8443/console).
 It is recommended that you use Google Chrome or Firefox for accessing it.
 
-* Infinispan visualizer: [http://visual-myproject.apps.cluster-sample.<openshift-master-ip>.nip.io/infinispan-visualizer](http://visual-myproject.apps.cluster-sample.<<openshift-master-ip>>.nip.io/infinispan-visualizer).  
+* Infinispan visualizer: [http://visual-myproject.apps.cluster-streaming.<openshift-master-ip>.nip.io/infinispan-visualizer](http://visual-myproject.apps.cluster-streaming.<<openshift-master-ip>>.nip.io/infinispan-visualizer).  
 
-* Application URL: [http://app-myproject.apps.cluster-sample.<openshift-master-ip>.nip.io](http://app-myproject.apps.cluster-sample.<openshift-master-ip>.nip.io).
+* Application URL: [http://app-myproject.apps.cluster-streaming.<openshift-master-ip>.nip.io](http://app-myproject.apps.cluster-streaming.<openshift-master-ip>.nip.io).
 
-* Dashboard HTTP host path:`-Dhttp.host=app-myproject.apps.cluster-sample.<openshift-master-ip>.nip.io`
+* Dashboard HTTP host path:`-Dhttp.host=app-myproject.apps.cluster-streaming.<openshift-master-ip>.nip.io`
 
 
 # Running Demo
