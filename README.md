@@ -121,13 +121,13 @@ Infinispan ephemeral stores all data in memory.
 
 When running in a local environment, use these paths or URLS for accessing components: 
 
-* OpenShift Console: [https://127.0.0.1:8443/console](https://127.0.0.1:8443/console)
+* OpenShift Console: [`https://127.0.0.1:8443/console`](https://127.0.0.1:8443/console)
 
   * It is recommended that you use Google Chrome or Firefox for accessing it.
 
-* Infinispan visualizer: [http://visual-myproject.127.0.0.1.nip.io/infinispan-visualizer](http://visual-myproject.127.0.0.1.nip.io/infinispan-visualizer)  
+* Infinispan visualizer: [`http://visual-myproject.127.0.0.1.nip.io/infinispan-visualizer`](http://visual-myproject.127.0.0.1.nip.io/infinispan-visualizer)  
 
-* Application URL: [http://app-myproject.127.0.0.1.nip.io](http://app-myproject.127.0.0.1.nip.io)
+* Application URL: [`http://app-myproject.127.0.0.1.nip.io`](http://app-myproject.127.0.0.1.nip.io)
 
 * Dashboard HTTP host path:`-Dhttp.host=app-myproject.127.0.0.1.nip.io`
 
@@ -135,15 +135,15 @@ When running in a local environment, use these paths or URLS for accessing compo
 
 When running on Google, use these paths or URLS for accessing components: 
 
-* OpenShift Console: [https://console.cluster-streaming.{OPENSHIFT_MASTER_IP}.nip.io:8443/console](https://console.cluster-streaming.<openshift-master-IP-address>.nip.io:8443/console)
+* OpenShift Console: [`https://console.cluster-streaming.OPENSHIFT_MASTER_IP.nip.io:8443/console`](https://console.cluster-streaming.OPENSHIFT_MASTER_IP.nip.io:8443/console)
 
   * It is recommended that you use Google Chrome or Firefox for accessing it.
 
-* Infinispan visualizer: [http://visual-myproject.apps.cluster-streaming.{OPENSHIFT_MASTER_IP}.nip.io/infinispan-visualizer](http://visual-myproject.apps.cluster-streaming.<{OPENSHIFT_MASTER_IP}>.nip.io/infinispan-visualizer)  
+* Infinispan visualizer: [`http://visual-myproject.apps.cluster-streaming.OPENSHIFT_MASTER_IP.nip.io/infinispan-visualizer`](http://visual-myproject.apps.cluster-streaming.OPENSHIFT_MASTER_IP.nip.io/infinispan-visualizer)  
 
-* Application URL: [http://app-myproject.apps.cluster-streaming.{OPENSHIFT_MASTER_IP}.nip.io](http://app-myproject.apps.cluster-streaming.{OPENSHIFT_MASTER_IP}.nip.io)
+* Application URL: [`http://app-myproject.apps.cluster-streaming.OPENSHIFT_MASTER_IP.nip.io`](http://app-myproject.apps.cluster-streaming.OPENSHIFT_MASTER_IP.nip.io)
 
-* Dashboard HTTP host path:`-Dhttp.host=app-myproject.apps.cluster-streaming.<openshift-master-ip>.nip.io`
+* Dashboard HTTP host path:`-Dhttp.host=app-myproject.apps.cluster-streaming.OPENSHIFT_MASTER_IP.nip.io`
 
 
 # Running Demo
