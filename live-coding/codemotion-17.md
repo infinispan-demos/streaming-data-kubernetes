@@ -45,11 +45,7 @@
 
 ### OpenShifter set up<a id="sec-1-1-1" name="sec-1-1-1"></a>
 
-~/0/events/codemotion<sub>17</sub>/openshifter
-
 ### Live coding<a id="sec-1-1-2" name="sec-1-1-2"></a>
-
-~/1/streaming-data-kubernetes
 
 # First time<a id="sec-2" name="sec-2"></a>
 
