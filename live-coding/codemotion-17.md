@@ -62,15 +62,15 @@ e.g.
 
 ## If something fails, destroy the cluster and then recreate it<a id="sec-2-3" name="sec-2-3"></a>
 
-docker run -e -ti -v \`pwd\`:/root/data docker.io/osevg/openshifter destroy cluster-streaming
-./delete-resources.sh cluster-streaming
-docker ps -a | awk '{ print $1,$2 }' | grep openshifter | awk '{print $1 }' | xargs -I {} docker rm {}
+    docker run -e -ti -v \`pwd\`:/root/data docker.io/osevg/openshifter destroy cluster-streaming
+    ./delete-resources.sh cluster-streaming
+    docker ps -a | awk '{ print $1,$2 }' | grep openshifter | awk '{print $1 }' | xargs -I {} docker rm {}
 
 # Pre talk<a id="sec-3" name="sec-3"></a>
 
 ## Go to Google Cloud console and start master<a id="sec-3-1" name="sec-3-1"></a>
 
-<openshift-master-ip>
+    <openshift-master-ip>
 
 ## Try accessing console<a id="sec-3-2" name="sec-3-2"></a>
 
@@ -89,10 +89,10 @@ docker ps -a | awk '{ print $1,$2 }' | grep openshifter | awk '{print $1 }' | xa
 -   [ ] Click on 'infinispan-ephemeral' and click 'Next'
 -   [ ] Add details
 
-&#x2013; [ ] APPLICATION<sub>NAME</sub>: datagrid
-&#x2013; [ ] MANAGEMENT<sub>USER</sub>: developer
-&#x2013; [ ] MANAGEMENT<sub>PASSWORD</sub>: developer
-&#x2013; [ ] NUMBER<sub>OF</sub><sub>INSTANCES</sub>: 3
+-- [ ] APPLICATION<sub>NAME</sub>: datagrid
+-- [ ] MANAGEMENT<sub>USER</sub>: developer
+-- [ ] MANAGEMENT<sub>PASSWORD</sub>: developer
+-- [ ] NUMBER<sub>OF</sub><sub>INSTANCES</sub>: 3
 
 ## Start Visualizer<a id="sec-4-2" name="sec-4-2"></a>
 
@@ -113,6 +113,7 @@ docker ps -a | awk '{ print $1,$2 }' | grep openshifter | awk '{print $1 }' | xa
 
 -   [ ] Create a Main verticle in app project
 
+```
     @Override
     public void start(Future<Void> startFuture) throws Exception {
       Router router = Router.router(vertx);
@@ -152,28 +153,35 @@ docker ps -a | awk '{ print $1,$2 }' | grep openshifter | awk '{print $1 }' | xa
     
       client.stop();
     }
+```
 
 -   [ ] Build and deploy app project
 
+```
     cd app
     mvn fabric8:deploy
+```
 
 -   [ ] Switch visualizer to \`repl\` cache
 -   [ ] Switch to terminal and make sure visualizer is in background
 -   [ ] From terminal, execute:
 
+```
     curl http://app-myproject.apps.cluster-streaming.<openshift-master-ip>.nip.io/test
+```
 
 ## Integrate data injector<a id="sec-4-4" name="sec-4-4"></a>
 
 -   [ ] Add a route for /inject and start the Injector verticle
 
+```
     router.get("/inject").handler(this::inject);
 
     private void inject(RoutingContext ctx) {
       vertx.deployVerticle(Injector.class.getName(), new DeploymentOptions());
       ctx.response().end("Injector started");
     }
+```
 
 -   [ ] Redeploy the app
 
