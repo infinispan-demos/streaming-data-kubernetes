@@ -72,7 +72,7 @@ The simplest thing is to create one in the folder where the OpenShift cluster de
 
     $ ssh-keygen -f openshift-key
 
-Finally, you need to missing details to OpenShift cluster definition file.
+Finally, you need to add missing details to OpenShift cluster definition file.
 This project contains a sample descriptor called 
 [cluster-streaming.yml](google/cluster-streaming.yml)
 which you can use as starting point.
