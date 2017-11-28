@@ -84,9 +84,12 @@ e.g.
 
 ## Create Infinispan data grid<a id="sec-4-1" name="sec-4-1"></a>
 
-Homepage / Select from Project
-Select 'myproject'
-Click on 'infinispan-ephemeral' and click 'Next'
+Homepage / Select from Project.
+
+Select 'myproject'.
+
+Click on 'infinispan-ephemeral' and click 'Next'.
+
 Add details:
 
     APPLICATION_NAME: datagrid
@@ -158,15 +161,17 @@ Build and deploy app project
     cd app
     mvn fabric8:deploy
 
-Switch visualizer to \`repl\` cache
-Switch to terminal and make sure visualizer is in background
+Switch visualizer to \`repl\` cache.
+
+Switch to terminal and make sure visualizer is in background.
+
 From terminal, execute:
 
     curl http://app-myproject.___.nip.io/test
 
 ## Integrate data injector<a id="sec-4-4" name="sec-4-4"></a>
 
-Add a route for /inject and start the Injector verticle
+Add a route for /inject and start the Injector verticle:
 
     router.get("/inject").handler(this::inject);
 
@@ -175,19 +180,21 @@ Add a route for /inject and start the Injector verticle
       ctx.response().end("Injector started");
     }
 
-Redeploy the app
+Redeploy the app:
 
     mvn fabric8:deploy
 
-Switch visualizer to default cache
-Switch to terminal and make sure visualizer is in background
+Switch visualizer to default cache.
+
+Switch to terminal and make sure visualizer is in background.
+
 From terminal, start the injector invoking:
 
     curl http://app-myproject.___.nip.io/inject
 
 ## Add Continuous Query Listener<a id="sec-4-5" name="sec-4-5"></a>
 
-Implement continuous query listener
+Implement continuous query listener:
 
     private void addContinuousQuery(RemoteCache<String, Stop> stopsCache) {
       QueryFactory qf = Search.getQueryFactory(stopsCache);
@@ -208,19 +215,20 @@ Implement continuous query listener
       continuousQuery.addContinuousQueryListener(query, listener);
     }
 
-Add evenbus route for sending events back to dashboard
+Add evenbus route for sending events back to dashboard:
 
     router.get("/eventbus/*").handler(AppUtils.sockJSHandler(vertx));
 
-Make /inject route deploy the continuous query listener
+Make /inject route deploy the continuous query listener:
 
     vertx.deployVerticle(Listener.class.getName(), new DeploymentOptions());
 
-Redeploy the app
+Redeploy the app:
 
     mvn fabric8:deploy
 
-Switch to terminal and make sure visualizer is in background
+Switch to terminal and make sure visualizer is in background.
+
 From terminal, start the injector invoking:
 
     curl http://app-myproject.___.nip.io/inject

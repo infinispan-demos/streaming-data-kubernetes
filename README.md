@@ -178,7 +178,7 @@ Verify the visualizer shows 3 nodes via Infinispan visualizer URL.
 Next, build and deploy the main application:
 
     cd app
-    mvn fabric8:deploy
+    mvn fabric8:deploy -Psolution
 
 Go to the visualizer and switch to `repl` cache. 
 
