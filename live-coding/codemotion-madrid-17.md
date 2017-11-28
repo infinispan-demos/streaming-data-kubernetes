@@ -74,7 +74,7 @@ e.g.
 
 ## Try accessing console<a id="sec-3-2" name="sec-3-2"></a>
 
-<https://console.cluster-streaming.<openshift-master-ip>.nip.io:8443/console/>
+    https://console.cluster-streaming.<openshift-master-ip>.nip.io:8443/console/
 
 ## Login with OpenShift client to Google Cloud<a id="sec-3-3" name="sec-3-3"></a>
 
