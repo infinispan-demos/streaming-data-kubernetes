@@ -89,35 +89,30 @@ Select 'myproject'
 Click on 'infinispan-ephemeral' and click 'Next'
 Add details:
 
-APPLICATION<sub>NAME</sub>: datagrid
-MANAGEMENT<sub>USER</sub>: developer
-MANAGEMENT<sub>PASSWORD</sub>: developer
-NUMBER<sub>OF</sub><sub>INSTANCES</sub>: 3
+    APPLICATION_NAME: datagrid
+    MANAGEMENT_USER: developer
+    MANAGEMENT_PASSWORD: developer
+    NUMBER_OF_INSTANCES_: 3
 
 ## Start Visualizer<a id="sec-4-2" name="sec-4-2"></a>
 
 While data grid loads, start visualizer
 
-```
     cd visual
     oc project myproject
     oc new-build --binary --name=visual
     oc start-build visual --from-dir=. --follow
     oc new-app visual
     oc expose service visual
-```
 
-Verify visualizer is working
+Verify visualizer is working by opening this URL: 
 
-```
-<http://visual-myproject.apps.cluster-streaming.<openshift-master-ip>.nip.io/infinispan-visualizer/>
-```
+    http://visual-myproject.___.nip.io/infinispan-visualizer
 
 ## Test Infinispan data grid<a id="sec-4-3" name="sec-4-3"></a>
 
 Create a Main verticle in app project
 
-```
     @Override
     public void start(Future<Void> startFuture) throws Exception {
       Router router = Router.router(vertx);
@@ -157,55 +152,43 @@ Create a Main verticle in app project
     
       client.stop();
     }
-```
 
 Build and deploy app project
 
-```
     cd app
     mvn fabric8:deploy
-```
 
 Switch visualizer to \`repl\` cache
 Switch to terminal and make sure visualizer is in background
 From terminal, execute:
 
-```
-    curl http://app-myproject.apps.cluster-streaming.<openshift-master-ip>.nip.io/test
-```
+    curl http://app-myproject.___.nip.io/test
 
 ## Integrate data injector<a id="sec-4-4" name="sec-4-4"></a>
 
 Add a route for /inject and start the Injector verticle
 
-```
     router.get("/inject").handler(this::inject);
 
     private void inject(RoutingContext ctx) {
       vertx.deployVerticle(Injector.class.getName(), new DeploymentOptions());
       ctx.response().end("Injector started");
     }
-```
 
 Redeploy the app
 
-```
     mvn fabric8:deploy
-```
 
 Switch visualizer to default cache
 Switch to terminal and make sure visualizer is in background
 From terminal, start the injector invoking:
 
-```
-    curl http://app-myproject.apps.cluster-streaming.<openshift-master-ip>.nip.io/inject
-```
+    curl http://app-myproject.___.nip.io/inject
 
 ## Add Continuous Query Listener<a id="sec-4-5" name="sec-4-5"></a>
 
 Implement continuous query listener
 
-```
     private void addContinuousQuery(RemoteCache<String, Stop> stopsCache) {
       QueryFactory qf = Search.getQueryFactory(stopsCache);
     
@@ -224,35 +207,24 @@ Implement continuous query listener
       continuousQuery = Search.getContinuousQuery(stopsCache);
       continuousQuery.addContinuousQueryListener(query, listener);
     }
-```
 
 Add evenbus route for sending events back to dashboard
 
-```
     router.get("/eventbus/*").handler(AppUtils.sockJSHandler(vertx));
-```
 
 Make /inject route deploy the continuous query listener
 
-```
     vertx.deployVerticle(Listener.class.getName(), new DeploymentOptions());
-```
 
 Redeploy the app
 
-```
     mvn fabric8:deploy
-```
 
 Switch to terminal and make sure visualizer is in background
 From terminal, start the injector invoking:
 
-```
-    curl http://app-myproject.apps.cluster-streaming.<openshift-master-ip>.nip.io/inject
-```
+    curl http://app-myproject.___.nip.io/inject
 
 Run Dashboard from IDE and check that delayed trains are received, passing in:
 
-```
     -Dhttp.host=<openshift-master-ip>
-```
