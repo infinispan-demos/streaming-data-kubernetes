@@ -1,0 +1,6 @@
+* Home golders
+** JFokus
+*** OpenShifter set up
+~/0/events/jfokus-18/openshifter
+*** Live coding
+~/1/streaming-data-kubernetes
