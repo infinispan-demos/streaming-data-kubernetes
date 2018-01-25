@@ -2,7 +2,7 @@
 
 set -e -x
 
-setup-local-openshift.sh
+./setup-local-openshift.sh
 
 APP=datagrid
 USR=developer
@@ -13,7 +13,7 @@ NS=myproject
 oc project ${NS}
 
 # Create datagrid
-oc process -n openshift infinispan-ephemeral -p \
+oc process -n ${NS} infinispan-ephemeral -p \
   NUMBER_OF_INSTANCES=${NUM_NODES} \
   NAMESPACE=${NS} \
   APPLICATION_NAME=${APP} \
