@@ -2,6 +2,7 @@ package app;
 
 import hu.akarnokd.rxjava2.interop.CompletableInterop;
 import io.reactivex.Single;
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
 import io.vertx.reactivex.core.AbstractVerticle;
 import io.vertx.reactivex.core.Future;
@@ -42,7 +43,7 @@ public class Main extends AbstractVerticle {
 
   private void test(RoutingContext rc) {
     vertx
-      .rxExecuteBlocking(remoteCacheManager())
+      .rxExecuteBlocking(Main::remoteCacheManager)
       .flatMap(remote -> vertx.rxExecuteBlocking(remoteCache(remote)))
       .flatMap(cache -> CompletableInterop.fromFuture(cache.putAsync("hello", "world")).andThen(just(cache)))
       .flatMap(cache -> Single.fromFuture(cache.getAsync("hello")))
@@ -55,8 +56,8 @@ public class Main extends AbstractVerticle {
     ;
   }
 
-  private static Handler<Future<RemoteCacheManager>> remoteCacheManager() {
-    return f -> f.complete(
+  private static void remoteCacheManager(Future<RemoteCacheManager> f) {
+    f.complete(
       new RemoteCacheManager(
         new ConfigurationBuilder().addServer()
           .host("datagrid-hotrod")
