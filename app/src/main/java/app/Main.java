@@ -22,7 +22,7 @@ public class Main extends AbstractVerticle {
   static final Logger log = Logger.getLogger(Main.class.getName());
 
   @Override
-  public void start(io.vertx.core.Future<Void> future) throws Exception {
+  public void start(io.vertx.core.Future<Void> future) {
     Router router = Router.router(vertx);
     router.get("/test").handler(this::test);
 
@@ -34,10 +34,7 @@ public class Main extends AbstractVerticle {
           log.info("HTTP server started");
           future.complete();
         },
-        failure -> {
-          log.log(Level.SEVERE, "HTTP server failed to start", failure);
-          future.fail(failure);
-        }
+        future::fail
       );
   }
 
