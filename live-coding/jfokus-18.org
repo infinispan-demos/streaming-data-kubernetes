@@ -1,6 +1,99 @@
 * Home golders
 ** JFokus
 *** OpenShifter set up
+#+BEGIN_SRC shell
 ~/0/events/jfokus-18/openshifter
+#+END_SRC
 *** Live coding
+#+BEGIN_SRC shell
 ~/1/streaming-data-kubernetes
+#+END_SRC
+* First time
+* Pre talk
+* Live Coding
+** Create Infinispan data grid
+*** Homepage / Select from Project
+*** Select ~myproject~
+*** Click on ~infinispan-ephemeral~ and click ~Next~
+*** Add details
+**** ~APPLICATION_NAME: datagrid~
+**** ~MANAGEMENT_USER: developer~
+**** ~MANAGEMENT_PASSWORD: developer~
+**** ~NUMBER_OF_INSTANCES: 3~
+** Start visualizer
+TODO
+** Test Infinispan datagrid
+*** Create a ~Main~ verticle in app project
+TODO
+*** Build and deploy app project
+#+BEGIN_SRC shell
+cd app
+mvn fabric8:deploy
+#+END_SRC
+*** Switch visualizer to `repl` cache
+*** Switch to terminal and make sure visualizer is in background
+*** Test the application
+#+BEGIN_SRC shell
+curl http://app-myproject.apps.cluster-streaming-v2.35.198.108.122.nip.io/test
+#+END_SRC
+** Integrate data injector
+*** Add a route for /inject and start the Injector verticle
+#+BEGIN_SRC java
+router.get("/inject").handler(this::inject);
+#+END_SRC
+#+BEGIN_SRC java
+private void inject(RoutingContext ctx) {
+  vertx.deployVerticle(Injector.class.getName(), new DeploymentOptions());
+  ctx.response().end("Injector started");
+}
+#+END_SRC
+*** Redeploy the app
+#+BEGIN_SRC shell
+mvn fabric8:deploy
+#+END_SRC
+*** Switch visualizer to default cache
+*** Switch to terminal and make sure visualizer is in background
+*** From terminal, start the injector invoking:
+#+BEGIN_SRC shell
+curl http://app-myproject.apps.cluster-streaming-v2.35.198.108.122.nip.io/inject
+#+END_SRC
+** Add Continuous Query Listener
+*** Implement continuous query listener
+#+BEGIN_SRC java
+private void addContinuousQuery(RemoteCache<String, Stop> stopsCache) {
+  QueryFactory qf = Search.getQueryFactory(stopsCache);
+
+  Query query = qf.from(Stop.class)
+    .having("delayMin").gt(0)
+    .build();
+
+  ContinuousQueryListener<String, Stop> listener =
+      new ContinuousQueryListener<String, Stop>() {
+    @Override
+    public void resultJoining(String key, Stop value) {
+      vertx.eventBus().publish("delayed-trains", toJson(value));
+    }
+  };
+
+  continuousQuery = Search.getContinuousQuery(stopsCache);
+  continuousQuery.addContinuousQueryListener(query, listener);
+}
+#+END_SRC
+*** Add evenbus route for sending events back to dashboard
+#+BEGIN_SRC java
+router.get("/eventbus/*").handler(AppUtils.sockJSHandler(vertx));
+#+END_SRC
+*** Make /inject route deploy the continuous query listener
+#+BEGIN_SRC java
+vertx.deployVerticle(Listener.class.getName(), new DeploymentOptions());
+#+END_SRC
+*** Redeploy the app
+#+BEGIN_SRC shell
+mvn fabric8:deploy
+#+END_SRC
+*** Switch to terminal and make sure visualizer is in background
+*** From terminal, start the injector invoking:
+#+BEGIN_SRC shell
+curl http://app-myproject.apps.cluster-streaming-v2.35.198.108.122.nip.io/inject
+#+END_SRC
+*** Run Dashboard from IDE and check that delayed trains are received
