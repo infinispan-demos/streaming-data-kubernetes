@@ -9,30 +9,116 @@
 ~/1/streaming-data-kubernetes
 #+END_SRC
 * First time
+** Create project on GCP
+#+BEGIN_SRC shell
+./create_project.sh os-v1 galder@zamarreno.com
+#+END_SRC
+** Create OpenShift cluster on project
+#+BEGIN_SRC shell
+cd openshifter
+docker run -e -ti -v `pwd`:/root/data docker.io/osevg/openshifter create cluster-streaming-v1
+#+END_SRC
+** If something fails, destroy the cluster and then recreate it
+docker run -e -ti -v `pwd`:/root/data docker.io/osevg/openshifter destroy cluster-streaming-v1
+./delete-resources.sh cluster-streaming-v1
+docker ps -a | awk '{ print $1,$2 }' | grep openshifter | awk '{print $1 }' | xargs -I {} docker rm {}
 * Pre talk
+** Go to Google Cloud console and start master
+35.197.194.82
+** Try accessing console
+https://console.cluster-streaming-v6.35.197.194.82.nip.io:8443/console/
+** Login with OpenShift client to Google Cloud
+#+BEGIN_SRC shell
+./start-gcp-openshift.sh 35.197.194.82 cluster-streaming-v1
+#+END_SRC
 * Live Coding
-** Create Infinispan data grid
+** Infinispan data grid
 *** Homepage / Select from Project
 *** Select ~myproject~
 *** Click on ~infinispan-ephemeral~ and click ~Next~
 *** Add details
-**** ~APPLICATION_NAME: datagrid~
-**** ~MANAGEMENT_USER: developer~
-**** ~MANAGEMENT_PASSWORD: developer~
-**** ~NUMBER_OF_INSTANCES: 3~
-** Start visualizer
-TODO
+#+BEGIN_SRC shell
+APPLICATION_NAME: datagrid
+MANAGEMENT_USER: developer
+MANAGEMENT_PASSWORD: developer
+NUMBER_OF_INSTANCES: 3
+#+END_SRC
+** Infinispan data grid Visualizer
+*** Deploy visualizer
+#+BEGIN_SRC shell
+cd visual
+oc project myproject
+oc new-build --binary --name=visual
+oc start-build visual --from-dir=. --follow
+oc new-app visual
+oc expose service visual
+#+END_SRC
+*** Verify visualizer
+http://visual-myproject.apps.cluster-streaming-v1.35.198.108.122.nip.io/infinispan-visualizer/
 ** Test Infinispan datagrid
 *** Create a ~Main~ verticle in app project
-TODO
+**** Implement start() method
+#+BEGIN_SRC java
+@Override
+public void start(io.vertx.core.Future<Void> future) {
+  Router router = Router.router(vertx);
+  router.get("/test").handler(this::test);
+
+  vertx.createHttpServer()
+    .requestHandler(router::accept)
+    .rxListen(8080)
+    .subscribe(
+      server -> {
+        log.info("HTTP server started");
+        future.complete();
+      },
+      future::fail
+    );
+}
+#+END_SRC
+**** Copy/paste RemoteCacheManager and RemoteCache creation code
+Type ~lcrcm~ and press ~TAB~
+#+BEGIN_SRC java
+private static void remoteCacheManager(Future<RemoteCacheManager> f) {
+  f.complete(
+    new RemoteCacheManager(
+      new ConfigurationBuilder().addServer()
+        .host("datagrid-hotrod")
+        .port(11222)
+        .build()));
+}
+
+private static Handler<Future<RemoteCache<String, String>>> remoteCache(RemoteCacheManager remote) {
+  return f -> f.complete(remote.getCache("repl"));
+}
+#+END_SRC
+**** Implement test(RoutingContext) method
+#+BEGIN_SRC java
+private void test(RoutingContext rc) {
+  vertx
+    .rxExecuteBlocking(Main::remoteCacheManager)
+    .flatMap(remote -> vertx.rxExecuteBlocking(remoteCache(remote)))
+    .flatMap(cache -> CompletableInterop.fromFuture(cache.putAsync("hello", "world")).andThen(just(cache)))
+    .flatMap(cache -> Single.fromFuture(cache.getAsync("hello")))
+    .subscribe(
+      value ->
+        rc.response().end(value)
+      , failure ->
+        rc.response().end("Failure: " + failure.toString())
+    )
+  ;
+}
+#+END_SRC
 *** Build and deploy app project
 #+BEGIN_SRC shell
 cd app
 mvn fabric8:deploy
 #+END_SRC
-*** Switch visualizer to `repl` cache
-*** Switch to terminal and make sure visualizer is in background
 *** Test the application
+Switch visualizer to ~repl~ cache.
+
+Switch to terminal and make sure visualizer is in background.
+
 #+BEGIN_SRC shell
 curl http://app-myproject.apps.cluster-streaming-v2.35.198.108.122.nip.io/test
 #+END_SRC
@@ -51,9 +137,11 @@ private void inject(RoutingContext ctx) {
 #+BEGIN_SRC shell
 mvn fabric8:deploy
 #+END_SRC
-*** Switch visualizer to default cache
-*** Switch to terminal and make sure visualizer is in background
-*** From terminal, start the injector invoking:
+*** Start injector
+Switch visualizer to default cache.
+
+Switch to terminal and make sure visualizer is in background.
+
 #+BEGIN_SRC shell
 curl http://app-myproject.apps.cluster-streaming-v2.35.198.108.122.nip.io/inject
 #+END_SRC
@@ -91,8 +179,9 @@ vertx.deployVerticle(Listener.class.getName(), new DeploymentOptions());
 #+BEGIN_SRC shell
 mvn fabric8:deploy
 #+END_SRC
-*** Switch to terminal and make sure visualizer is in background
-*** From terminal, start the injector invoking:
+*** Start injector
+Switch to terminal and make sure visualizer is in background.
+
 #+BEGIN_SRC shell
 curl http://app-myproject.apps.cluster-streaming-v2.35.198.108.122.nip.io/inject
 #+END_SRC
