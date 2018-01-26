@@ -3,7 +3,7 @@ package app;
 import app.model.Stop;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
-import io.vertx.rxjava.core.AbstractVerticle;
+import io.vertx.reactivex.core.AbstractVerticle;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.Search;
@@ -15,25 +15,28 @@ import org.infinispan.query.dsl.QueryFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-import static app.AppUtils.createRemoteCacheManager;
-
 public class Listener extends AbstractVerticle {
 
-  RemoteCacheManager client;
+  RemoteCache<String, Stop> stopsCache;
   ContinuousQuery<String, Stop> continuousQuery;
 
   @Override
-  public void start(Future<Void> startFuture) throws Exception {
-    vertx.<RemoteCacheManager>rxExecuteBlocking(fut -> fut.complete(createRemoteCacheManager()))
-      .doOnSuccess(rcm -> client = rcm)
-      .flatMap(v -> vertx.<RemoteCache<String, Stop>>rxExecuteBlocking(fut -> fut.complete(client.getCache())))
-      .subscribe(cache -> {
-        startFuture.complete(null);
-        addContinuousQuery(cache);
-      }, startFuture::fail);
+  public void start(Future<Void> startFuture) {
+    vertx
+      .rxExecuteBlocking(AppUtils::remoteCacheManager)
+      .flatMap(remote -> vertx.rxExecuteBlocking(AppUtils.remoteCache(remote)))
+      .subscribe(
+        cache -> {
+          startFuture.complete();
+          addContinuousQuery(cache);
+        }
+        , startFuture::fail
+      );
   }
 
-  private void addContinuousQuery(RemoteCache<String, Stop> stopsCache) {
+  private void addContinuousQuery(RemoteCache<String, Stop> cache) {
+    stopsCache = cache;
+
     // TODO - live code
   }
 
@@ -42,8 +45,8 @@ public class Listener extends AbstractVerticle {
     if (continuousQuery != null)
       continuousQuery.removeAllListeners();
 
-    if (client != null)
-      client.stop();
+    if (stopsCache != null)
+      stopsCache.getRemoteCacheManager().stop();
   }
 
   private static String toJson(Stop stop) {
