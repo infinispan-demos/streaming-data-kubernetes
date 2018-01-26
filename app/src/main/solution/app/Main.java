@@ -1,96 +1,81 @@
 package app;
 
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
+import hu.akarnokd.rxjava2.interop.CompletableInterop;
+import io.reactivex.Single;
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Handler;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.bridge.BridgeEventType;
-import io.vertx.ext.bridge.PermittedOptions;
-import io.vertx.ext.web.Router;
-import io.vertx.ext.web.RoutingContext;
-import io.vertx.ext.web.handler.sockjs.BridgeOptions;
-import io.vertx.ext.web.handler.sockjs.SockJSHandler;
+import io.vertx.reactivex.core.AbstractVerticle;
+import io.vertx.reactivex.core.Future;
+import io.vertx.reactivex.ext.web.Router;
+import io.vertx.reactivex.ext.web.RoutingContext;
+import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 
-import java.net.SocketAddress;
-import java.util.Set;
 import java.util.logging.Logger;
 
-import static io.vertx.core.http.HttpHeaders.CONTENT_TYPE;
+import static io.reactivex.Single.just;
 
 public class Main extends AbstractVerticle {
 
   static final Logger log = Logger.getLogger(Main.class.getName());
 
   @Override
-  public void start(Future<Void> startFuture) throws Exception {
+  public void start(io.vertx.core.Future<Void> future) {
     Router router = Router.router(vertx);
-    router.get("/test").blockingHandler(this::test);
+    router.get("/test").handler(this::test);
     router.get("/inject").handler(this::inject);
-    router.route("/eventbus/*").handler(this.sockJSHandler());
+    router.get("/eventbus/*").handler(AppUtils.sockJSHandler(vertx));
 
-    vertx.createHttpServer()
+    vertx
+      .createHttpServer()
       .requestHandler(router::accept)
-      .listen(8080, ar -> {
-        if (ar.succeeded()) {
-          System.out.println("Server started");
-          startFuture.complete();
-        } else {
-          startFuture.fail(ar.cause());
+      .rxListen(8080)
+      .subscribe(
+        server -> {
+          log.info("HTTP server started");
+          future.complete();
         }
-      });
+        , future::fail
+      );
   }
 
-  private void inject(RoutingContext ctx) {
-    Future<String> injectorFuture = Future.future();
-    vertx.deployVerticle(Injector.class.getName(), injectorFuture);
-    Future<String> listenerFuture = Future.future();
-    vertx.deployVerticle(Listener.class.getName(), listenerFuture);
-    CompositeFuture.all(injectorFuture, listenerFuture).setHandler(ar -> {
-      if (ar.succeeded()) {
-        ctx.response().end("Injector started");
-      } else {
-        ctx.fail(ar.cause());
-      }
-    });
+  private void inject(RoutingContext rc) {
+    vertx
+      .rxDeployVerticle(Injector.class.getName(), new DeploymentOptions())
+      .flatMap(x -> vertx.rxDeployVerticle(Listener.class.getName(), new DeploymentOptions()))
+      .subscribe(
+        x ->
+          rc.response().end("Injector and listener started")
+        , failure ->
+          rc.response().end("Injector or listener start failure: " + failure.toString())
+      );
   }
 
-  private Handler<RoutingContext> sockJSHandler() {
-    SockJSHandler sockJSHandler = SockJSHandler.create(vertx);
-    PermittedOptions outPermit = new PermittedOptions().setAddress("delayed-trains");
-    BridgeOptions options = new BridgeOptions().addOutboundPermitted(outPermit);
-    sockJSHandler.bridge(options, be -> {
-      if (be.type() == BridgeEventType.REGISTER)
-        log.info("SockJs: client connected");
-
-      be.complete(true);
-    });
-    return sockJSHandler;
+  private void test(RoutingContext rc) {
+    vertx
+      .rxExecuteBlocking(Main::remoteCacheManager)
+      .flatMap(remote -> vertx.rxExecuteBlocking(remoteCache(remote)))
+      .flatMap(cache -> CompletableInterop.fromFuture(cache.putAsync("hello", "world")).andThen(just(cache)))
+      .flatMap(cache -> Single.fromFuture(cache.getAsync("hello")))
+      .subscribe(
+        value -> rc.response().end(value)
+        , failure ->
+          rc.response().end("Failure: " + failure.toString())
+      );
   }
 
-  private void test(RoutingContext ctx) {
-    RemoteCacheManager client = new RemoteCacheManager(
-      new ConfigurationBuilder().addServer()
-        .host("datagrid-hotrod")
-        .port(11222).build());
+  private static void remoteCacheManager(Future<RemoteCacheManager> f) {
+    f.complete(
+      new RemoteCacheManager(
+        new ConfigurationBuilder().addServer()
+          .host("datagrid-hotrod")
+          .port(11222)
+          .build()));
+  }
 
-    client.getCache("repl").put("hello", "world");
-    Object value = client.getCache("repl").get("hello");
-
-    Set<SocketAddress> topology =
-      client.getCache("repl").getCacheTopologyInfo().getSegmentsPerServer().keySet();
-
-    JsonObject rsp = new JsonObject()
-      .put("get", value)
-      .put("topology", topology.toString());
-
-    ctx.response()
-        .putHeader(CONTENT_TYPE, "application/json; charset=utf-8")
-        .end(rsp.encodePrettily());
-
-    client.stop();
+  private static Handler<Future<RemoteCache<String, String>>> remoteCache(RemoteCacheManager remote) {
+    return f -> f.complete(remote.getCache("repl"));
   }
 
 }

@@ -19,9 +19,11 @@ cd openshifter
 docker run -e -ti -v `pwd`:/root/data docker.io/osevg/openshifter create cluster-streaming-v1
 #+END_SRC
 ** If something fails, destroy the cluster and then recreate it
+#+BEGIN_SRC shell
 docker run -e -ti -v `pwd`:/root/data docker.io/osevg/openshifter destroy cluster-streaming-v1
 ./delete-resources.sh cluster-streaming-v1
 docker ps -a | awk '{ print $1,$2 }' | grep openshifter | awk '{print $1 }' | xargs -I {} docker rm {}
+#+END_SRC
 * Pre talk
 ** Go to Google Cloud console and start master
 35.197.194.82

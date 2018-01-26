@@ -4,12 +4,13 @@ import app.model.Station;
 import app.model.Stop;
 import app.model.Train;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.bridge.PermittedOptions;
-import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
-import io.vertx.ext.web.handler.sockjs.SockJSHandler;
+import io.vertx.reactivex.core.Future;
+import io.vertx.reactivex.core.Vertx;
+import io.vertx.reactivex.ext.web.RoutingContext;
+import io.vertx.reactivex.ext.web.handler.sockjs.SockJSHandler;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
@@ -31,7 +32,7 @@ public class AppUtils {
 
   static final Logger log = Logger.getLogger(AppUtils.class.getName());
 
-  static RemoteCacheManager createRemoteCacheManager() {
+  static void remoteCacheManager(Future<RemoteCacheManager> f) {
     RemoteCacheManager client = new RemoteCacheManager(
       new ConfigurationBuilder().addServer()
         .host("datagrid-hotrod")
@@ -46,10 +47,14 @@ public class AppUtils {
       ctx.registerMarshaller(new Station.Marshaller());
       ctx.registerMarshaller(new Train.Marshaller());
       addModelToServer(client);
-      return client;
+      f.complete(client);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  static Handler<Future<RemoteCache<String, Stop>>> remoteCache(RemoteCacheManager remote) {
+    return f -> f.complete(remote.getCache());
   }
 
   private static void addModelToServer(RemoteCacheManager client) {
