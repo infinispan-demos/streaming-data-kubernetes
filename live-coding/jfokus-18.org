@@ -1,6 +1,11 @@
 #+MACRO: cluster cluster-streaming-v3
 #+MACRO: ip 35.205.20.82
 
+* Variables
+** OpenShift cluster name
+{{{cluster}}}
+** OpenShift master IP address
+{{{ip}}}
 * Home golders
 ** OpenShifter set up
 #+BEGIN_SRC shell
@@ -33,7 +38,6 @@ docker rmi osevg/openshifter
 #+END_SRC
 * Pre talk
 ** Verify if OpenShift master in Google Cloud is responsive
-{{{ip}}}
 https://console.{{{cluster}}}.{{{ip}}}.nip.io:8443/console/
 
 If not accessible, create a new cluster.
