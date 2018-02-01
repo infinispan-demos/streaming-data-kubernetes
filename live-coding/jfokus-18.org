@@ -1,21 +1,24 @@
 * Home golders
-** JFokus
-*** OpenShifter set up
+** OpenShifter set up
 #+BEGIN_SRC shell
 ~/0/events/jfokus-18/openshifter
 #+END_SRC
-*** Live coding
+** Live coding
 #+BEGIN_SRC shell
 ~/1/streaming-data-kubernetes
 #+END_SRC
 * First time
 ** Create project on GCP
 #+BEGIN_SRC shell
+cd openshifter
+google-cloud
 ./create_project.sh os-v1 galder@zamarreno.com
 #+END_SRC
 ** Create OpenShift cluster on project
 #+BEGIN_SRC shell
 cd openshifter
+docker ps -a | awk '{ print $1,$2 }' | grep openshifter | awk '{print $1 }' | xargs -I {} docker rm {}
+docker rmi osevg/openshifter
 docker run -e -ti -v `pwd`:/root/data docker.io/osevg/openshifter create cluster-streaming-v1
 #+END_SRC
 ** If something fails, destroy the cluster and then recreate it
@@ -23,15 +26,23 @@ docker run -e -ti -v `pwd`:/root/data docker.io/osevg/openshifter create cluster
 docker run -e -ti -v `pwd`:/root/data docker.io/osevg/openshifter destroy cluster-streaming-v1
 ./delete-resources.sh cluster-streaming-v1
 docker ps -a | awk '{ print $1,$2 }' | grep openshifter | awk '{print $1 }' | xargs -I {} docker rm {}
+docker rmi osevg/openshifter
 #+END_SRC
 * Pre talk
-** Go to Google Cloud console and start master
-35.197.194.82
-** Try accessing console
-https://console.cluster-streaming-v6.35.197.194.82.nip.io:8443/console/
+** Verify if OpenShift master in Google Cloud is responsive
+35.205.20.82
+https://console.cluster-streaming-v3.35.205.20.82.nip.io:8443/console/
+
+If not accessible, create a new cluster.
+Otherwise cleanup any previous deployments executing:
+#+BEGIN_SRC shell
+oc login -u developer -p developer https://console.cluster-streaming-v3.35.205.20.82.nip.io:8443
+oc-cleanup
+#+END_SRC
 ** Login with OpenShift client to Google Cloud
 #+BEGIN_SRC shell
-./start-gcp-openshift.sh 35.197.194.82 cluster-streaming-v1
+oc36
+./setup-gcp-openshift.sh 35.197.194.82 cluster-streaming-v1
 #+END_SRC
 * Live Coding
 ** Infinispan data grid
@@ -79,20 +90,7 @@ public void start(io.vertx.core.Future<Void> future) {
 }
 #+END_SRC
 **** Copy/paste RemoteCacheManager and RemoteCache creation code
-Type ~lcrcm~ and press ~TAB~
-#+BEGIN_SRC java
-private static void remoteCacheManager(Future<RemoteCacheManager> f) {
-  f.complete(
-    new RemoteCacheManager(
-      new ConfigurationBuilder().addServer()
-        .host("datagrid-hotrod")
-        .port(11222)
-        .build()));
-}
-
-private static Handler<Future<RemoteCache<String, String>>> remoteCache(RemoteCacheManager remote) {
-  return f -> f.complete(remote.getCache("repl"));
-}
+Type ~skrcm~ and press ~TAB~
 #+END_SRC
 **** Implement test(RoutingContext) method
 #+BEGIN_SRC java
@@ -130,9 +128,15 @@ curl http://app-myproject.apps.cluster-streaming-v2.35.198.108.122.nip.io/test
 router.get("/inject").handler(this::inject);
 #+END_SRC
 #+BEGIN_SRC java
-private void inject(RoutingContext ctx) {
-  vertx.deployVerticle(Injector.class.getName(), new DeploymentOptions());
-  ctx.response().end("Injector started");
+private void inject(RoutingContext rc) {
+  vertx
+    .rxDeployVerticle(Injector.class.getName(), new DeploymentOptions())
+    .subscribe(
+      x ->
+        rc.response().end("Injector started")
+      , failure ->
+        rc.response().end("Injector failed to start: " + failure)
+    );
 }
 #+END_SRC
 *** Redeploy the app
@@ -175,7 +179,7 @@ router.get("/eventbus/*").handler(AppUtils.sockJSHandler(vertx));
 #+END_SRC
 *** Make /inject route deploy the continuous query listener
 #+BEGIN_SRC java
-vertx.deployVerticle(Listener.class.getName(), new DeploymentOptions());
+.flatMap(x -> vertx.rxDeployVerticle(Listener.class.getName(), new DeploymentOptions()));
 #+END_SRC
 *** Redeploy the app
 #+BEGIN_SRC shell
@@ -188,3 +192,5 @@ Switch to terminal and make sure visualizer is in background.
 curl http://app-myproject.apps.cluster-streaming-v2.35.198.108.122.nip.io/inject
 #+END_SRC
 *** Run Dashboard from IDE and check that delayed trains are received
+Make sure http.host system property correctly points to the address,
+e.g. ~-Dhttp.host=app-myproject.apps.cluster-streaming-v3.35.205.20.82.nip.io~
