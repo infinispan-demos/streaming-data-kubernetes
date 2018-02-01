@@ -1,3 +1,6 @@
+#+MACRO: cluster cluster-streaming-v3
+#+MACRO: ip 35.205.20.82
+
 * Home golders
 ** OpenShifter set up
 #+BEGIN_SRC shell
@@ -12,37 +15,37 @@
 #+BEGIN_SRC shell
 cd openshifter
 google-cloud
-./create_project.sh os-v1 galder@zamarreno.com
+./create_project.sh os-v2 galder@zamarreno.com
 #+END_SRC
 ** Create OpenShift cluster on project
 #+BEGIN_SRC shell
 cd openshifter
 docker ps -a | awk '{ print $1,$2 }' | grep openshifter | awk '{print $1 }' | xargs -I {} docker rm {}
 docker rmi osevg/openshifter
-docker run -e -ti -v `pwd`:/root/data docker.io/osevg/openshifter create cluster-streaming-v1
+docker run -e -ti -v `pwd`:/root/data docker.io/osevg/openshifter create {{{cluster}}}
 #+END_SRC
 ** If something fails, destroy the cluster and then recreate it
 #+BEGIN_SRC shell
-docker run -e -ti -v `pwd`:/root/data docker.io/osevg/openshifter destroy cluster-streaming-v1
-./delete-resources.sh cluster-streaming-v1
+docker run -e -ti -v `pwd`:/root/data docker.io/osevg/openshifter destroy {{{cluster}}}
+./delete-resources.sh {{{cluster}}}
 docker ps -a | awk '{ print $1,$2 }' | grep openshifter | awk '{print $1 }' | xargs -I {} docker rm {}
 docker rmi osevg/openshifter
 #+END_SRC
 * Pre talk
 ** Verify if OpenShift master in Google Cloud is responsive
-35.205.20.82
-https://console.cluster-streaming-v3.35.205.20.82.nip.io:8443/console/
+{{{ip}}}
+https://console.{{{cluster}}}.{{{ip}}}.nip.io:8443/console/
 
 If not accessible, create a new cluster.
 Otherwise cleanup any previous deployments executing:
 #+BEGIN_SRC shell
-oc login -u developer -p developer https://console.cluster-streaming-v3.35.205.20.82.nip.io:8443
+oc loginf -u developer -p developer https://console.{{{cluster}}}.{{{ip}}}.nip.io:8443
 oc-cleanup
 #+END_SRC
 ** Login with OpenShift client to Google Cloud
 #+BEGIN_SRC shell
 oc36
-./setup-gcp-openshift.sh 35.197.194.82 cluster-streaming-v1
+./setup-gcp-openshift.sh {{{ip}}} {{{cluster}}}
 #+END_SRC
 * Live Coding
 ** Infinispan data grid
@@ -67,7 +70,7 @@ oc new-app visual
 oc expose service visual
 #+END_SRC
 *** Verify visualizer
-http://visual-myproject.apps.cluster-streaming-v1.35.198.108.122.nip.io/infinispan-visualizer/
+http://visual-myproject.apps.{{{cluster}}}.{{{ip}}}.nip.io/infinispan-visualizer/
 ** Test Infinispan datagrid
 *** Create a ~Main~ verticle in app project
 **** Implement start() method
@@ -120,7 +123,7 @@ Switch visualizer to ~repl~ cache.
 Switch to terminal and make sure visualizer is in background.
 
 #+BEGIN_SRC shell
-curl http://app-myproject.apps.cluster-streaming-v2.35.198.108.122.nip.io/test
+curl http://app-myproject.apps.{{{cluster}}}.{{{ip}}}.nip.io/test
 #+END_SRC
 ** Integrate data injector
 *** Add a route for /inject and start the Injector verticle
@@ -149,7 +152,7 @@ Switch visualizer to default cache.
 Switch to terminal and make sure visualizer is in background.
 
 #+BEGIN_SRC shell
-curl http://app-myproject.apps.cluster-streaming-v2.35.198.108.122.nip.io/inject
+curl http://app-myproject.apps.{{{cluster}}}.{{{ip}}}.nip.io/inject
 #+END_SRC
 ** Add Continuous Query Listener
 *** Implement continuous query listener
@@ -189,8 +192,10 @@ mvn fabric8:deploy
 Switch to terminal and make sure visualizer is in background.
 
 #+BEGIN_SRC shell
-curl http://app-myproject.apps.cluster-streaming-v2.35.198.108.122.nip.io/inject
+curl http://app-myproject.apps.{{{cluster}}}.{{{ip}}}.nip.io/inject
 #+END_SRC
 *** Run Dashboard from IDE and check that delayed trains are received
-Make sure http.host system property correctly points to the address,
-e.g. ~-Dhttp.host=app-myproject.apps.cluster-streaming-v3.35.205.20.82.nip.io~
+Make sure http.host system property correctly points to the address, e.g.
+#+BEGIN_SRC shell
+-Dhttp.host=app-myproject.apps.{{{cluster}}}.{{{ip}}}.nip.io
+#+END_SRC
