@@ -206,3 +206,17 @@ Once the injector started, check the visualizer and see how each node has more a
 
 Finally, execute `dashboard.Dashboard` from the IDE passing in the correct `-Dhttp.host` value. 
 You should see a dashboard appearing with delayed trains. 
+
+# Live Events
+ 
+Here's a list of conferences and user groups where this demo has been presented.
+The `live-coding` folder contains step-by-step live coding instructions of the demos, as presented in these live events:
+
+* 19th October 2017 - Basel One
+(
+[slides](https://speakerdeck.com/galderz/streaming-data-analysis-with-kubernetes)
+|
+video NA
+|
+[live demo steps](live-coding/basel-one-17.md)
+)
