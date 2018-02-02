@@ -220,3 +220,11 @@ video NA
 |
 [live demo steps](live-coding/basel-one-17.md)
 )
+* 24th November 2017 - Codemotion Madrid
+(
+[slides](https://speakerdeck.com/galderz/streaming-data-ni-pierdas-el-tren-ni-esperes-en-balde)
+|
+[video](https://www.youtube.com/watch?v=eu5LrbMm-KU)
+|
+[live demo steps](live-coding/codemotion-madrid-17.md)
+)
