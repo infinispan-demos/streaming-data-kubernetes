@@ -97,7 +97,7 @@ public void start(io.vertx.core.Future<Void> future) {
 }
 #+END_SRC
 **** Copy/paste RemoteCacheManager and RemoteCache creation code
-Type ~skrcm~ ([[skrcm]]) and press ~TAB~
+Type ~skrcm~ ([[#skrcm]]) and press ~TAB~
 **** Implement test(RoutingContext) method
 #+BEGIN_SRC java
 private void test(RoutingContext rc) {
@@ -203,7 +203,7 @@ Make sure http.host system property correctly points to the address, e.g.
 -Dhttp.host=app-myproject.apps.{{{cluster}}}.{{{ip}}}.nip.io
 #+END_SRC
 * Live templates
-** skrcm
+** #skrcm
 #+BEGIN_SRC java
 private static void remoteCacheManager(Future<RemoteCacheManager> f) {
   f.complete(
