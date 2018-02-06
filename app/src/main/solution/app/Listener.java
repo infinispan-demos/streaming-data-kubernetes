@@ -13,7 +13,6 @@ import org.infinispan.query.dsl.QueryFactory;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
 public class Listener extends AbstractVerticle {
 
@@ -39,21 +38,22 @@ public class Listener extends AbstractVerticle {
   private void addContinuousQuery(RemoteCache<String, Stop> cache) {
     stopsCache = cache;
 
-    QueryFactory queryFactory = Search.getQueryFactory(stopsCache);
+    QueryFactory queryFactory = Search.getQueryFactory(cache);
 
-    Query query = queryFactory.from(Stop.class)
+    Query query = queryFactory
+      .from(Stop.class)
       .having("delayMin").gt(0)
       .build();
 
     ContinuousQueryListener<String, Stop> listener = new ContinuousQueryListener<String, Stop>() {
       @Override
       public void resultJoining(String key, Stop value) {
-        log.info("Result joined query: " + key);
         vertx.eventBus().publish("delayed-trains", toJson(value));
       }
     };
 
-    continuousQuery = Search.getContinuousQuery(stopsCache);
+    ContinuousQuery<String, Stop> continuousQuery = Search.getContinuousQuery(cache);
+    continuousQuery.removeAllListeners();
     continuousQuery.addContinuousQueryListener(query, listener);
   }
 

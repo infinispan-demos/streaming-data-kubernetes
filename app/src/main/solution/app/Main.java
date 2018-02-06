@@ -33,7 +33,7 @@ public class Main extends AbstractVerticle {
       .rxListen(8080)
       .subscribe(
         server -> {
-          log.info("HTTP server started");
+          log.info("Http server started");
           future.complete();
         }
         , future::fail
@@ -42,13 +42,14 @@ public class Main extends AbstractVerticle {
 
   private void inject(RoutingContext rc) {
     vertx
-      .rxDeployVerticle(Injector.class.getName(), new DeploymentOptions())
-      .flatMap(x -> vertx.rxDeployVerticle(Listener.class.getName(), new DeploymentOptions()))
+      .rxDeployVerticle(Injector.class.getName())
+      .flatMap(x -> vertx.rxDeployVerticle(Listener.class.getName()))
       .subscribe(
         x ->
           rc.response().end("Injector and listener started")
-        , failure ->
-          rc.response().end("Injector or listener start failure: " + failure.toString())
+        ,
+        failure ->
+          rc.response().end("Failure: " + failure)
       );
   }
 
@@ -59,9 +60,10 @@ public class Main extends AbstractVerticle {
       .flatMap(cache -> CompletableInterop.fromFuture(cache.putAsync("hello", "world")).andThen(just(cache)))
       .flatMap(cache -> Single.fromFuture(cache.getAsync("hello")))
       .subscribe(
-        value -> rc.response().end(value)
+        value ->
+          rc.response().end("Value was: " + value)
         , failure ->
-          rc.response().end("Failure: " + failure.toString())
+          rc.response().end("Failed: " + failure)
       );
   }
 
