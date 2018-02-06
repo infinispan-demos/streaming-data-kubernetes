@@ -97,8 +97,7 @@ public void start(io.vertx.core.Future<Void> future) {
 }
 #+END_SRC
 **** Copy/paste RemoteCacheManager and RemoteCache creation code
-Type ~skrcm~ and press ~TAB~
-#+END_SRC
+Type ~skrcm~ ([[skrcm]]) and press ~TAB~
 **** Implement test(RoutingContext) method
 #+BEGIN_SRC java
 private void test(RoutingContext rc) {
@@ -202,4 +201,20 @@ curl http://app-myproject.apps.{{{cluster}}}.{{{ip}}}.nip.io/inject
 Make sure http.host system property correctly points to the address, e.g.
 #+BEGIN_SRC shell
 -Dhttp.host=app-myproject.apps.{{{cluster}}}.{{{ip}}}.nip.io
+#+END_SRC
+* Live templates
+** skrcm
+#+BEGIN_SRC java
+private static void remoteCacheManager(Future<RemoteCacheManager> f) {
+  f.complete(
+    new RemoteCacheManager(
+      new ConfigurationBuilder().addServer()
+        .host("datagrid-hotrod")
+        .port(11222)
+        .build()));
+}
+
+private static Handler<Future<RemoteCache<String, String>>> remoteCache(RemoteCacheManager remote) {
+  return f -> f.complete(remote.getCache("repl"));
+}
 #+END_SRC
