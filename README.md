@@ -228,3 +228,11 @@ video NA
 |
 [live demo steps](live-coding/codemotion-madrid-17.md)
 )
+* 6th February 2017 - JFokus 2018
+(
+[slides](https://speakerdeck.com/galderz/streaming-data-analysis-with-kubernetes-1)
+|
+video NA
+|
+[live demo steps](live-coding/jfokus-18.org)
+)
