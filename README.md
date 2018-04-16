@@ -70,7 +70,7 @@ You will need to add name of this file (without json ending) to the OpenShift cl
 To be able to create an OpenShift cluster, it's necessary to provide an SSH key.
 The simplest thing is to create one in the folder where the OpenShift cluster descriptor will be located:
 
-    $ ssh-keygen -f openshift-key
+    $ ssh-keygen -f openshifter-key
 
 Finally, you need to add missing details to OpenShift cluster definition file.
 This project contains a sample descriptor called 

@@ -11,6 +11,7 @@ import org.infinispan.query.api.continuous.ContinuousQueryListener;
 import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryFactory;
 
+import java.util.logging.Logger;
 import java.util.HashMap;
 import java.util.Map;
 

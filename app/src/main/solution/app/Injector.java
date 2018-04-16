@@ -5,9 +5,8 @@ import app.model.Stop;
 import app.model.Train;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
-import io.vertx.rxjava.core.AbstractVerticle;
+import io.vertx.reactivex.core.AbstractVerticle;
 import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.client.hotrod.RemoteCacheManager;
 import rx.Notification;
 import rx.Observable;
 import rx.functions.Actions;
@@ -28,33 +27,36 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 
-import static app.AppUtils.createRemoteCacheManager;
 import static java.util.logging.Level.SEVERE;
 
 public class Injector extends AbstractVerticle {
 
   static final Logger log = Logger.getLogger(Injector.class.getName());
 
-  RemoteCacheManager client;
+  RemoteCache<String, Stop> stopsCache;
 
   @Override
-  public void start(Future<Void> startFuture) throws Exception {
-    vertx.<RemoteCacheManager>rxExecuteBlocking(fut -> fut.complete(createRemoteCacheManager()))
-      .doOnSuccess(rcm -> client = rcm)
-      .flatMap(v -> vertx.<RemoteCache<String, Stop>>rxExecuteBlocking(fut -> fut.complete(client.getCache())))
-      .subscribe(cache -> {
-        startFuture.complete(null);
-        inject(cache);
-      }, startFuture::fail);
+  public void start(Future<Void> startFuture) {
+    vertx
+      .rxExecuteBlocking(AppUtils::remoteCacheManager)
+      .flatMap(remote -> vertx.rxExecuteBlocking(AppUtils.remoteCache(remote)))
+      .subscribe(
+        cache -> {
+          startFuture.complete();
+          inject(cache);
+        }
+        , startFuture::fail
+      );
   }
 
   @Override
   public void stop() throws Exception {
-    if (client != null)
-      client.stop();
+    if (stopsCache != null)
+      stopsCache.getRemoteCacheManager().stop();
   }
 
-  private void inject(RemoteCache<String, Stop> stopsCache) {
+  private void inject(RemoteCache<String, Stop> cache) {
+    stopsCache = cache;
     stopsCache.clear(); // Remove data on start, to start clean
 
     vertx.setPeriodic(5000L, l -> {
@@ -88,7 +90,7 @@ public class Injector extends AbstractVerticle {
         InputStream gzipStream = new GZIPInputStream(inputStream);
         Reader decoder = new InputStreamReader(gzipStream, StandardCharsets.UTF_8);
         return new BufferedReader(decoder);
-        }, StringObservable::from)
+      }, StringObservable::from)
       .compose(StringObservable::byLine)
       .subscribeOn(Schedulers.io());
   }
