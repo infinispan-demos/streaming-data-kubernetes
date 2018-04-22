@@ -1,6 +1,5 @@
-package infinispan.rx;
+package app.infinispan;
 
-import app.Injector;
 import io.reactivex.Single;
 import io.vertx.core.Handler;
 import io.vertx.reactivex.core.Future;
@@ -18,11 +17,11 @@ import java.util.logging.Logger;
 import static org.infinispan.query.remote.client.ProtobufMetadataManagerConstants.ERRORS_KEY_SUFFIX;
 import static org.infinispan.query.remote.client.ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME;
 
-final class Util {
+final class Utils {
 
-  static final Logger log = Logger.getLogger(Util.class.getName());
+  static final Logger log = Logger.getLogger(Utils.class.getName());
 
-  private Util() {
+  private Utils() {
   }
 
   static <K, V> Single<RemoteCache<K, V>> getRemoteCache(

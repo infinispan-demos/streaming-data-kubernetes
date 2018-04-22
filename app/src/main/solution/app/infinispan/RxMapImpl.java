@@ -1,6 +1,5 @@
-package infinispan.rx.impl;
+package app.infinispan;
 
-import infinispan.rx.InfinispanRxMap;
 import io.reactivex.Completable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
@@ -8,7 +7,7 @@ import io.vertx.reactivex.core.Context;
 import io.vertx.reactivex.core.Vertx;
 import org.infinispan.client.hotrod.RemoteCache;
 
-public final class RxMapImpl<K, V> implements InfinispanRxMap<K, V> {
+final class RxMapImpl<K, V> implements InfinispanRxMap<K, V> {
 
   private final RemoteCache<K, V> cache;
   private final Vertx vertx;

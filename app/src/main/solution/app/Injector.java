@@ -1,9 +1,9 @@
 package app;
 
+import app.infinispan.InfinispanRxMap;
 import app.model.Station;
 import app.model.Stop;
 import app.model.Train;
-import infinispan.rx.InfinispanRxMap;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.disposables.Disposable;

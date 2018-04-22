@@ -1,6 +1,5 @@
-package infinispan.rx;
+package app.infinispan;
 
-import infinispan.rx.impl.RxMapImpl;
 import io.reactivex.Completable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
@@ -25,8 +24,11 @@ public interface InfinispanRxMap<K, V> {
     , ConfigurationBuilder cfg
     , Vertx vertx
   ) {
-    return Util.getRemoteCache(cacheName, cfg, vertx)
-      .map(cache -> new RxMapImpl<>((RemoteCache<K, V>) cache, vertx));
+    return Utils.getRemoteCache(cacheName, cfg, vertx)
+      .map(
+        cache ->
+          new RxMapImpl<>((RemoteCache<K, V>) cache, vertx)
+      );
   }
 
   static <K, V> Single<InfinispanRxMap<K, V>> createIndexed(
@@ -35,8 +37,11 @@ public interface InfinispanRxMap<K, V> {
     , ConfigurationBuilder cfg
     , Vertx vertx
   ) {
-    return Util.getIndexedRemoteCache(cacheName, indexed, cfg, vertx)
-      .map(cache -> new RxMapImpl<>((RemoteCache<K, V>) cache, vertx));
+    return Utils.getIndexedRemoteCache(cacheName, indexed, cfg, vertx)
+      .map(
+        cache ->
+          new RxMapImpl<>((RemoteCache<K, V>) cache, vertx)
+      );
   }
 
 }

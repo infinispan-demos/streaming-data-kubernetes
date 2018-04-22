@@ -1,6 +1,6 @@
 package app;
 
-import infinispan.rx.InfinispanRxMap;
+import app.infinispan.InfinispanRxMap;
 import io.vertx.reactivex.core.AbstractVerticle;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
