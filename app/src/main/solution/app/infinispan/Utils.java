@@ -71,14 +71,18 @@ final class Utils {
           String file =
             buildProtoFile(fileName, clazz, schemaBuilder, serialCtx);
 
-          log.info("Add indexed file " + fileName);
-          metadataCache.put(fileName, file);
+          if (!metadataCache.containsKey(fileName)) {
+            log.info("Add indexed file " + fileName);
+            metadataCache.put(fileName, file);
 
-          String errors = metadataCache.get(ERRORS_KEY_SUFFIX);
-          if (errors != null)
-            f.fail(new AssertionError("Error in proto file"));
-          else
-            log.info("Added indexed file " + fileName);
+            String errors = metadataCache.get(ERRORS_KEY_SUFFIX);
+            if (errors != null)
+              f.fail(new AssertionError("Error in proto file"));
+            else
+              log.info("Added indexed file " + fileName);
+          } else {
+            log.info("Metadata for " + fileName + " already present");
+          }
         }
         f.complete(remote);
       } catch (IOException e) {
