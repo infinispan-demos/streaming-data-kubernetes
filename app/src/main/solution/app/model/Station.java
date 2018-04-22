@@ -16,65 +16,55 @@
 
 package app.model;
 
-import org.infinispan.protostream.MessageMarshaller;
+import org.infinispan.protostream.annotations.ProtoDoc;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoMessage;
 
-import java.io.IOException;
-
+import static app.model.ModelUtils.TO_UTF8;
 import static app.model.ModelUtils.bs;
-import static app.model.ModelUtils.str;
 
+@ProtoDoc("@Indexed")
+@ProtoMessage(name = "Station")
 public class Station {
 
-  public final long id;
-  private final byte[] name;
+  private long id;
+  private byte[] name;
 
-  private Station(long id, byte[] name) {
+  // Required for proto schema builder
+  public Station() {
+  }
+
+  public Station(long id, String name) {
     this.id = id;
+    this.name = bs(name);
+  }
+
+  @ProtoDoc("@Field(index = Index.NO, store = Store.NO)")
+  @ProtoField(number = 10, required = true)
+  public long getId() {
+    return id;
+  }
+
+  @ProtoDoc("@Field(index = Index.NO, store = Store.NO)")
+  @ProtoField(number = 20, required = false) // TODO: required should be true @adrian
+  public byte[] getName() {
+    return name;
+  }
+
+  public void setId(long id) {
+    this.id = id;
+  }
+
+  public void setName(byte[] name) {
     this.name = name;
-  }
-
-  public static Station make(long id, String name) {
-    return new Station(id, bs(name));
-  }
-
-  public String getName() {
-    return str(name);
   }
 
   @Override
   public String toString() {
     return "Station{" +
       "id=" + id +
-      ", name='" + getName() + '\'' +
+      ", name='" + TO_UTF8.apply(name) + '\'' +
       '}';
   }
-
-  public static final class Marshaller implements MessageMarshaller<Station> {
-
-    @Override
-    public Station readFrom(ProtoStreamReader reader) throws IOException {
-      long id = reader.readLong("id");
-      byte[] name = reader.readBytes("name");
-      return new Station(id, name);
-    }
-
-    @Override
-    public void writeTo(ProtoStreamWriter writer, Station obj) throws IOException {
-      writer.writeLong("id", obj.id);
-      writer.writeBytes("name", obj.name);
-    }
-
-    @Override
-    public Class<? extends Station> getJavaClass() {
-      return Station.class;
-    }
-
-    @Override
-    public String getTypeName() {
-      return "app.model.Station";
-    }
-
-  }
-
 
 }

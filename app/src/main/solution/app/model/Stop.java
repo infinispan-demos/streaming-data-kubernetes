@@ -16,17 +16,24 @@
 
 package app.model;
 
-import org.infinispan.protostream.MessageMarshaller;
+import org.infinispan.protostream.annotations.ProtoDoc;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoMessage;
 
-import java.io.IOException;
 import java.util.Date;
 
+@ProtoDoc("@Indexed")
+@ProtoMessage(name = "Stop")
 public class Stop {
 
-  public final Train train;
-  public final int delayMin;
-  public final Station station;
-  public final Date departureTs;
+  public Train train;
+  public int delayMin;
+  public Station station;
+  public Date departureTs;
+
+  // Required for proto schema builder
+  public Stop() {
+  }
 
   public Stop(Train train, int delayMin, Station station, Date departureTs) {
     this.train = train;
@@ -35,8 +42,44 @@ public class Stop {
     this.departureTs = departureTs;
   }
 
-  public static Stop make(Train train, int delayMin, Station station, Date departureTs) {
-    return new Stop(train, delayMin, station, departureTs);
+  @ProtoDoc("@Field(index = Index.NO, store = Store.NO)")
+  @ProtoField(number = 10, required = true)
+  public Train getTrain() {
+    return train;
+  }
+
+  @ProtoDoc("@Field(index = Index.NO, store = Store.NO)")
+  @ProtoField(number = 20, required = true)
+  public int getDelayMin() {
+    return delayMin;
+  }
+
+  @ProtoDoc("@Field(index = Index.NO, store = Store.NO)")
+  @ProtoField(number = 30, required = true)
+  public Station getStation() {
+    return station;
+  }
+
+  @ProtoDoc("@Field(index = Index.NO, store = Store.NO)")
+  @ProtoField(number = 40, required = true)
+  public Date getDepartureTs() {
+    return departureTs;
+  }
+
+  public void setTrain(Train train) {
+    this.train = train;
+  }
+
+  public void setDelayMin(int delayMin) {
+    this.delayMin = delayMin;
+  }
+
+  public void setStation(Station station) {
+    this.station = station;
+  }
+
+  public void setDepartureTs(Date departureTs) {
+    this.departureTs = departureTs;
   }
 
   @Override
@@ -47,37 +90,6 @@ public class Stop {
       ", station=" + station +
       ", departureTs=" + departureTs +
       '}';
-  }
-
-  public static final class Marshaller implements MessageMarshaller<Stop> {
-
-    @Override
-    public Stop readFrom(ProtoStreamReader reader) throws IOException {
-      Train train = reader.readObject("train", Train.class);
-      int delayMin = reader.readInt("delayMin");
-      Station station = reader.readObject("station", Station.class);
-      Date departureTs = reader.readDate("departureTs");
-      return new Stop(train, delayMin, station, departureTs);
-    }
-
-    @Override
-    public void writeTo(ProtoStreamWriter writer, Stop obj) throws IOException {
-      writer.writeObject("train", obj.train, Train.class);
-      writer.writeInt("delayMin", obj.delayMin);
-      writer.writeObject("station", obj.station, Station.class);
-      writer.writeDate("departureTs", obj.departureTs);
-    }
-
-    @Override
-    public Class<? extends Stop> getJavaClass() {
-      return Stop.class;
-    }
-
-    @Override
-    public String getTypeName() {
-      return "app.model.Stop";
-    }
-
   }
 
 }

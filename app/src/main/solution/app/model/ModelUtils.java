@@ -18,17 +18,17 @@ package app.model;
 
 import java.nio.charset.Charset;
 import java.util.Objects;
+import java.util.function.Function;
 
 public class ModelUtils {
 
   private static final Charset CHARSET = Charset.forName("UTF-8");
 
+  public static final Function<byte[], String> TO_UTF8 =
+    bs -> Objects.isNull(bs) ? null : new String(bs, CHARSET);
+
   public static byte[] bs(String s) {
     return Objects.isNull(s) ? null : s.getBytes(CHARSET);
-  }
-
-  public static String str(byte[] bs) {
-    return Objects.isNull(bs) ? null : new String(bs, CHARSET);
   }
 
 }

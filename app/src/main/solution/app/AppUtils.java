@@ -15,8 +15,8 @@ import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
-import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.SerializationContext;
+import org.infinispan.protostream.annotations.ProtoSchemaBuilder;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 
 import java.io.IOException;
@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static org.infinispan.query.remote.client.ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME;
@@ -40,21 +41,41 @@ public class AppUtils {
         .marshaller(ProtoStreamMarshaller.class)
         .build());
 
-    SerializationContext ctx = ProtoStreamMarshaller.getSerializationContext(client);
+    SerializationContext serialCtx =
+      ProtoStreamMarshaller.getSerializationContext(client);
+
     try {
-      ctx.registerProtoFiles(FileDescriptorSource.fromResources("app-model.proto"));
-      ctx.registerMarshaller(new Stop.Marshaller());
-      ctx.registerMarshaller(new Station.Marshaller());
-      ctx.registerMarshaller(new Train.Marshaller());
-      addModelToServer(client);
+      RemoteCache<String, String> metadataCache =
+        client.getCache(PROTOBUF_METADATA_CACHE_NAME);
+
+      addPojoMetadata(Station.class, "station.proto", serialCtx, metadataCache);
+      addPojoMetadata(Train.class, "train.proto", serialCtx, metadataCache);
+      addPojoMetadata(Stop.class, "stop.proto", serialCtx, metadataCache);
+
       f.complete(client);
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      log.log(Level.SEVERE, "Unable to auto-generate player.proto", e);
+      f.fail(e);
     }
   }
 
+  private static void addPojoMetadata(
+      Class<?> clazz
+      , String protoFileName
+      , SerializationContext serialCtx
+      , RemoteCache<String, String> metadataCache
+  ) throws IOException {
+    ProtoSchemaBuilder protoSchemaBuilder = new ProtoSchemaBuilder();
+    String playerSchemaFile = protoSchemaBuilder
+        .fileName(protoFileName)
+        .addClass(clazz)
+        .build(serialCtx);
+
+    metadataCache.put(protoFileName, playerSchemaFile);
+  }
+
   static Handler<Future<RemoteCache<String, Stop>>> remoteCache(RemoteCacheManager remote) {
-    return f -> f.complete(remote.getCache());
+    return f -> f.complete(remote.getCache("station-boards"));
   }
 
   private static void addModelToServer(RemoteCacheManager client) {

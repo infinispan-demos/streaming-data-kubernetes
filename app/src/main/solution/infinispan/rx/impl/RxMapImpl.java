@@ -3,6 +3,7 @@ package infinispan.rx.impl;
 import infinispan.rx.InfinispanRxMap;
 import io.reactivex.Completable;
 import io.reactivex.Maybe;
+import io.reactivex.Single;
 import io.vertx.reactivex.core.Context;
 import io.vertx.reactivex.core.Vertx;
 import org.infinispan.client.hotrod.RemoteCache;
@@ -43,6 +44,27 @@ public final class RxMapImpl<K, V> implements InfinispanRxMap<K, V> {
           ? Maybe.just(value)
           : Maybe.empty())
       ;
+  }
+
+  @Override
+  public Single<Integer> size() {
+    return getContext()
+      .rxExecuteBlocking(
+        fut -> fut.complete(cache.size())
+      );
+  }
+
+  @Override
+  public Completable clear() {
+    return getContext()
+      .rxExecuteBlocking(
+        fut -> {
+          cache.clear();
+          fut.complete();
+        }
+      )
+      //.doOnError(err -> LOGGER.error("Error on remove", err))
+      .toCompletable();
   }
 
   @Override

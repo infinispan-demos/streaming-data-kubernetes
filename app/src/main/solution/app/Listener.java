@@ -15,6 +15,8 @@ import java.util.logging.Logger;
 import java.util.HashMap;
 import java.util.Map;
 
+import static app.model.ModelUtils.TO_UTF8;
+
 public class Listener extends AbstractVerticle {
 
   static final Logger log = Logger.getLogger(Listener.class.getName());
@@ -69,12 +71,12 @@ public class Listener extends AbstractVerticle {
 
   private static String toJson(Stop stop) {
     Map<String, Object> map = new HashMap<>();
-    map.put("type", stop.train.getCategory());
+    map.put("type", TO_UTF8.apply(stop.train.getCategory()));
     map.put("departure", String.format("%tR", stop.departureTs));
-    map.put("station", stop.station.getName());
-    map.put("destination", stop.train.getTo());
+    map.put("station", TO_UTF8.apply(stop.station.getName()));
+    map.put("destination", TO_UTF8.apply(stop.train.getTo()));
     map.put("delay", stop.delayMin);
-    map.put("trainName", stop.train.getName());
+    map.put("trainName", TO_UTF8.apply(stop.train.getName()));
     return new JsonObject(map).encode();
   }
 

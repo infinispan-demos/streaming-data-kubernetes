@@ -4,9 +4,9 @@ import infinispan.rx.InfinispanRxMap;
 import io.vertx.reactivex.core.AbstractVerticle;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
-import org.infinispan.client.hotrod.configuration.Configuration;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static io.reactivex.Single.just;
@@ -20,6 +20,7 @@ public class Main extends AbstractVerticle {
     Router router = Router.router(vertx);
     router.get("/test").handler(this::test);
     router.get("/inject").handler(this::inject);
+    router.get("/inject/stop").handler(this::stopInject);
     router.get("/eventbus/*").handler(AppUtils.sockJSHandler(vertx));
 
     vertx
@@ -35,6 +36,11 @@ public class Main extends AbstractVerticle {
       );
   }
 
+  private void stopInject(RoutingContext rc) {
+    vertx.eventBus().publish("injector", "stop");
+    rc.response().end("Injector stopped");
+  }
+
   private void inject(RoutingContext rc) {
     vertx
       .rxDeployVerticle(Injector.class.getName())
@@ -43,18 +49,20 @@ public class Main extends AbstractVerticle {
         x ->
           rc.response().end("Injector and listener started")
         ,
-        failure ->
-          rc.response().end("Failure: " + failure)
+        failure -> {
+          log.log(Level.SEVERE, "Failure injecting", failure);
+          rc.response().end("Failure: " + failure);
+        }
       );
   }
 
   private void test(RoutingContext rc) {
-    Configuration testCfg =
-      new ConfigurationBuilder()
-        .addServer()
+    ConfigurationBuilder testCfg = new ConfigurationBuilder();
+
+    testCfg
+      .addServer()
           .host("datagrid-hotrod")
-          .port(11222)
-        .build();
+          .port(11222);
 
     InfinispanRxMap
       .create("repl", testCfg, vertx)
