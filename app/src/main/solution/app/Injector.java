@@ -56,7 +56,7 @@ public class Injector extends AbstractVerticle {
         , vertx
       )
       .doOnSuccess(map -> this.map = map)
-      .flatMapCompletable(x -> eventBusConsumer())
+      .flatMapCompletable(x -> addEventBusConsumer())
       .subscribe(
         () -> {
           inject(map);
@@ -66,7 +66,7 @@ public class Injector extends AbstractVerticle {
       );
   }
 
-  private Completable eventBusConsumer() {
+  private Completable addEventBusConsumer() {
     EventBus eb = vertx.eventBus();
 
     eb.consumer("injector", message -> {
@@ -124,37 +124,15 @@ public class Injector extends AbstractVerticle {
   }
 
   @Override
-  public void stop(io.vertx.core.Future<Void> future) throws Exception {
+  public void stop(io.vertx.core.Future<Void> future) {
+    stopInject();
+
     this.map
       .close()
       .subscribe(
         CompletableHelper.toObserver(future)
       );
   }
-
-//  private void inject(RemoteCache<String, Stop> cache) {
-//    stopsCache = cache;
-//    stopsCache.clear(); // Remove data on start, to start clean
-//
-//    vertx.setPeriodic(5000L, l -> {
-//      vertx.executeBlocking(fut -> {
-//        log.info(String.format("Progress: stored=%d%n", stopsCache.size()));
-//        fut.complete();
-//      }, false, ar -> {});
-//    });
-//
-//    rxReadGunzippedTextResource("cff-stop-2016-02-29__.jsonl.gz")
-//      .map(this::toEntry)
-//      .repeatWhen(notification -> notification.map(terminal -> {
-//        log.info("Reached end of file, clear and restart");
-//        stopsCache.clear(); // If it reaches the end of the file, start again
-//        return Notification.createOnNext(null);
-//      }))
-//      .zipWith(Observable.interval(10, TimeUnit.MILLISECONDS), (item, interval) -> item)
-//      .doOnNext(entry -> stopsCache.put(entry.getKey(), entry.getValue()))
-//      .subscribe(Actions.empty(),
-//        t -> log.log(SEVERE, "Error while loading station boards", t));
-//  }
 
   private static Flowable<String> rxReadFile(String resource) {
     Objects.requireNonNull(resource);

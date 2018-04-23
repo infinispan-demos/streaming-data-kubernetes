@@ -1,16 +1,17 @@
 package app;
 
+import app.infinispan.InfinispanRxMap;
+import app.model.Station;
 import app.model.Stop;
-import io.vertx.core.Future;
+import app.model.Train;
+import io.reactivex.Completable;
+import io.reactivex.disposables.Disposable;
 import io.vertx.core.json.JsonObject;
+import io.vertx.reactivex.CompletableHelper;
 import io.vertx.reactivex.core.AbstractVerticle;
-import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.client.hotrod.Search;
-import org.infinispan.query.api.continuous.ContinuousQuery;
-import org.infinispan.query.api.continuous.ContinuousQueryListener;
-import org.infinispan.query.dsl.Query;
-import org.infinispan.query.dsl.QueryFactory;
+import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,50 +22,66 @@ public class Listener extends AbstractVerticle {
 
   static final Logger log = Logger.getLogger(Listener.class.getName());
 
-  RemoteCache<String, Stop> stopsCache;
-  ContinuousQuery<String, Stop> continuousQuery;
+  private InfinispanRxMap<String, Stop> stationBoardsMap;
+  private Disposable continuousQueryDisposable;
 
   @Override
-  public void start(Future<Void> startFuture) {
-    vertx
-      .rxExecuteBlocking(AppUtils::remoteCacheManager)
-      .flatMap(remote -> vertx.rxExecuteBlocking(AppUtils.remoteCache(remote)))
+  public void start(io.vertx.core.Future<Void> future) {
+    ConfigurationBuilder cfg = new ConfigurationBuilder();
+
+    cfg
+      .addServer()
+      .host("datagrid-hotrod")
+      .port(11222);
+
+    InfinispanRxMap
+      .<String, Stop>createIndexed(
+        "station-boards"
+        , new Class[]{Train.class, Station.class, Stop.class}
+        , cfg
+        , vertx
+      )
+      .doOnSuccess(map -> this.stationBoardsMap = map)
+      .flatMapCompletable(this::addContinuousQuery)
       .subscribe(
-        cache -> {
-          startFuture.complete();
-          addContinuousQuery(cache);
-        }
-        , startFuture::fail
+        future::complete
+        , future::fail
       );
   }
 
-  private void addContinuousQuery(RemoteCache<String, Stop> cache) {
-    stopsCache = cache;
+  private Completable addContinuousQuery(InfinispanRxMap<String, Stop> map) {
+    stopContinuousQuery();
 
-    QueryFactory queryFactory = Search.getQueryFactory(cache);
+    continuousQueryDisposable =
+      map
+        .removeContinuousQueries()
+        .andThen(map.continuousQuery("FROM Stop s WHERE s.delayMin > 0"))
+        .subscribe(
+          pair ->
+            vertx.eventBus()
+              .publish("delayed-trains", toJson(pair.getValue()))
+          , t ->
+            log.log(Level.SEVERE, "Error adding continuous query", t))
+        ;
 
-    Query query = queryFactory
-      .create("FROM Stop s WHERE s.delayMin > 0");
+    return Completable.complete();
+  }
 
-    ContinuousQueryListener<String, Stop> listener = new ContinuousQueryListener<String, Stop>() {
-      @Override
-      public void resultJoining(String key, Stop value) {
-        vertx.eventBus().publish("delayed-trains", toJson(value));
-      }
-    };
-
-    ContinuousQuery<String, Stop> continuousQuery = Search.getContinuousQuery(cache);
-    continuousQuery.removeAllListeners();
-    continuousQuery.addContinuousQueryListener(query, listener);
+  private void stopContinuousQuery() {
+    if (continuousQueryDisposable != null)
+      continuousQueryDisposable.dispose();
   }
 
   @Override
-  public void stop() throws Exception {
-    if (continuousQuery != null)
-      continuousQuery.removeAllListeners();
+  public void stop(io.vertx.core.Future<Void> future) {
+    stopContinuousQuery();
 
-    if (stopsCache != null)
-      stopsCache.getRemoteCacheManager().stop();
+    this.stationBoardsMap
+      .removeContinuousQueries()
+      .andThen(this.stationBoardsMap.close())
+      .subscribe(
+        CompletableHelper.toObserver(future)
+      );
   }
 
   private static String toJson(Stop stop) {

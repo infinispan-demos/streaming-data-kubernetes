@@ -33,61 +33,6 @@ public class AppUtils {
 
   static final Logger log = Logger.getLogger(AppUtils.class.getName());
 
-  static void remoteCacheManager(Future<RemoteCacheManager> f) {
-    RemoteCacheManager client = new RemoteCacheManager(
-      new ConfigurationBuilder().addServer()
-        .host("datagrid-hotrod")
-        .port(11222)
-        .marshaller(ProtoStreamMarshaller.class)
-        .build());
-
-    SerializationContext serialCtx =
-      ProtoStreamMarshaller.getSerializationContext(client);
-
-    try {
-      RemoteCache<String, String> metadataCache =
-        client.getCache(PROTOBUF_METADATA_CACHE_NAME);
-
-      addPojoMetadata(Station.class, "station.proto", serialCtx, metadataCache);
-      addPojoMetadata(Train.class, "train.proto", serialCtx, metadataCache);
-      addPojoMetadata(Stop.class, "stop.proto", serialCtx, metadataCache);
-
-      f.complete(client);
-    } catch (IOException e) {
-      log.log(Level.SEVERE, "Unable to auto-generate player.proto", e);
-      f.fail(e);
-    }
-  }
-
-  private static void addPojoMetadata(
-      Class<?> clazz
-      , String protoFileName
-      , SerializationContext serialCtx
-      , RemoteCache<String, String> metadataCache
-  ) throws IOException {
-    ProtoSchemaBuilder protoSchemaBuilder = new ProtoSchemaBuilder();
-    String playerSchemaFile = protoSchemaBuilder
-        .fileName(protoFileName)
-        .addClass(clazz)
-        .build(serialCtx);
-
-    metadataCache.put(protoFileName, playerSchemaFile);
-  }
-
-  static Handler<Future<RemoteCache<String, Stop>>> remoteCache(RemoteCacheManager remote) {
-    return f -> f.complete(remote.getCache("station-boards"));
-  }
-
-  private static void addModelToServer(RemoteCacheManager client) {
-    InputStream is = AppUtils.class.getResourceAsStream("/app-model.proto");
-    RemoteCache<String, String> metaCache = client.getCache(PROTOBUF_METADATA_CACHE_NAME);
-    metaCache.put("app-model.proto", readInputStream(is));
-
-    String errors = metaCache.get(ProtobufMetadataManagerConstants.ERRORS_KEY_SUFFIX);
-    if (errors != null)
-      throw new RuntimeException("Error in proto file");
-  }
-
   static Handler<RoutingContext> sockJSHandler(Vertx vertx) {
     SockJSHandler sockJSHandler = SockJSHandler.create(vertx);
     PermittedOptions outPermit = new PermittedOptions().setAddress("delayed-trains");

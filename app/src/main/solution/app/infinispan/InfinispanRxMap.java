@@ -1,11 +1,14 @@
 package app.infinispan;
 
 import io.reactivex.Completable;
+import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.Single;
 import io.vertx.reactivex.core.Vertx;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
+
+import java.util.Map;
 
 public interface InfinispanRxMap<K, V> {
 
@@ -14,6 +17,10 @@ public interface InfinispanRxMap<K, V> {
   Maybe<V> get(K key);
 
   Single<Integer> size();
+
+  Flowable<Map.Entry<K, V>> continuousQuery(String query);
+
+  Completable removeContinuousQueries();
 
   Completable clear();
 
