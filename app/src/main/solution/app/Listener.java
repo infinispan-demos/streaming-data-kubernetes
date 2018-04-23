@@ -44,9 +44,7 @@ public class Listener extends AbstractVerticle {
     QueryFactory queryFactory = Search.getQueryFactory(cache);
 
     Query query = queryFactory
-      .from(Stop.class)
-      .having("delayMin").gt(0)
-      .build();
+      .create("FROM Stop s WHERE s.delayMin > 0");
 
     ContinuousQueryListener<String, Stop> listener = new ContinuousQueryListener<String, Stop>() {
       @Override
