@@ -21,8 +21,10 @@ oc process -n ${NS} infinispan-ephemeral -p \
   APPLICATION_PASSWORD=${PASS} | oc create -f -
 
 # Deploy app
-cd app
-mvn fabric8:deploy -Psolution
+(cd ./app; mvn fabric8:deploy -Psolution)
+
+# Deploy train positions
+(cd ./train-positions; mvn fabric8:deploy)
 
 # TODO: Wait until curl returns success
 
@@ -30,6 +32,6 @@ mvn fabric8:deploy -Psolution
 curl http://app-myproject.127.0.0.1.nip.io/test
 
 # Inject
-curl http://app-myproject.127.0.0.1.nip.io/inject
+# curl http://app-myproject.127.0.0.1.nip.io/inject
 
-echo "Start dashboard"
+echo "Inject and start dashboard"

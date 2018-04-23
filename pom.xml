@@ -12,6 +12,9 @@
   <modules>
     <module>app</module>
     <module>dashboard</module>
+
+    <!-- Temporary until persistent volumes are in place -->
+    <module>train-positions</module>
   </modules>
 
 </project>

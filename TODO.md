@@ -8,3 +8,5 @@ Start with an EmptyDir volume (edited)
 Create a project with a simple endpoint to upload the file
 
 Mount this volument in the 2 other pods
+
+# Use indexed instead of distributed cache configurations

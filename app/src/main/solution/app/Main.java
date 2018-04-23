@@ -1,9 +1,13 @@
 package app;
 
 import app.infinispan.InfinispanRxMap;
+import io.reactivex.Single;
 import io.vertx.reactivex.core.AbstractVerticle;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
+import io.vertx.reactivex.ext.web.client.HttpResponse;
+import io.vertx.reactivex.ext.web.client.WebClient;
+import io.vertx.reactivex.ext.web.codec.BodyCodec;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 
 import java.util.logging.Level;
@@ -37,13 +41,20 @@ public class Main extends AbstractVerticle {
   }
 
   private void stopInject(RoutingContext rc) {
-    vertx.eventBus().publish("injector", "stop");
-    rc.response().end("Injector stopped");
+    httpGet("train-positions", "/inject/stop")
+      .subscribe(
+        x -> {
+          vertx.eventBus().publish("injector", "stop");
+          rc.response().end("Injector stopped");
+        }
+        , t -> rc.response().end("Failed to stop injector")
+      );
   }
 
   private void inject(RoutingContext rc) {
     vertx
       .rxDeployVerticle(Injector.class.getName())
+      .flatMap(x -> httpGet("train-positions", "/inject"))
       .flatMap(x -> vertx.rxDeployVerticle(Listener.class.getName()))
       .subscribe(
         x ->
@@ -54,6 +65,15 @@ public class Main extends AbstractVerticle {
           rc.response().end("Failure: " + failure);
         }
       );
+  }
+
+  private Single<HttpResponse<String>> httpGet(String host, String uri) {
+    log.info("Call HTTP GET " + host + uri);
+    WebClient client = WebClient.create(vertx);
+    return client
+      .get(8080, host, uri)
+      .as(BodyCodec.string())
+      .rxSend();
   }
 
   private void test(RoutingContext rc) {
