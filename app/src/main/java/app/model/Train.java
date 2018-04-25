@@ -16,87 +16,80 @@
 
 package app.model;
 
-import org.infinispan.protostream.MessageMarshaller;
+import org.infinispan.protostream.annotations.ProtoDoc;
+import org.infinispan.protostream.annotations.ProtoField;
+import org.infinispan.protostream.annotations.ProtoMessage;
 
-import java.io.IOException;
+import static app.model.ModelUtils.FROM_UTF8;
+import static app.model.ModelUtils.TO_UTF8;
 
-import static app.model.ModelUtils.bs;
-import static app.model.ModelUtils.str;
-
+@ProtoDoc("@Indexed")
+@ProtoMessage(name = "Train") // TODO: Optional
 public class Train {
 
-  //   private String id;
-  private final byte[] name;
-  private final byte[] to;
-  private final byte[] cat;
-  private final byte[] operator; // nullable
+  private byte[] name;
+  private byte[] to;
+  private byte[] category;
+  private byte[] operator; // nullable
 
-  private Train(byte[] name, byte[] to, byte[] cat, byte[] operator) {
+  public Train() {
+  }
+
+  public Train(String name, String to, String category, String operator) {
+    this.name = FROM_UTF8.apply(name);
+    this.to = FROM_UTF8.apply(to);
+    this.category = FROM_UTF8.apply(category);
+    this.operator = FROM_UTF8.apply(operator);
+  }
+
+  @ProtoDoc("@Field(index = Index.NO, store = Store.NO)")
+  @ProtoField(number = 10, required = false) // TODO: required should be true @adrian
+  public byte[] getName() {
+    return name;
+  }
+
+  @ProtoDoc("@Field(index = Index.NO, store = Store.NO)")
+  @ProtoField(number = 20, required = false) // TODO: required should be true @adrian
+  public byte[] getTo() {
+    return to;
+  }
+
+  @ProtoDoc("@Field(index = Index.NO, store = Store.NO)")
+  @ProtoField(number = 30, required = false) // TODO: required should be true @adrian
+  public byte[] getCategory() {
+    return category;
+  }
+
+  @ProtoDoc("@Field(index = Index.NO, store = Store.NO)")
+  @ProtoField(number = 40, required = false)
+  public byte[] getOperator() {
+    return operator;
+  }
+
+  public void setName(byte[] name) {
     this.name = name;
+  }
+
+  public void setTo(byte[] to) {
     this.to = to;
-    this.cat = cat;
+  }
+
+  public void setCategory(byte[] category) {
+    this.category = category;
+  }
+
+  public void setOperator(byte[] operator) {
     this.operator = operator;
-  }
-
-  public static Train make(String name, String to, String cat, String operator) {
-    return new Train(bs(name), bs(to), bs(cat), bs(operator));
-  }
-
-  public String getName() {
-    return str(name);
-  }
-
-  public String getTo() {
-    return str(to);
-  }
-
-  public String getCategory() {
-    return str(cat);
-  }
-
-  public String getOperator() {
-    return str(operator);
   }
 
   @Override
   public String toString() {
     return "Train{" +
-      "name='" + getName() + '\'' +
-      ", to='" + getTo() + '\'' +
-      ", category='" + getCategory() + '\'' +
-      ", operator='" + getOperator() + '\'' +
+      "name='" + TO_UTF8.apply(name) + '\'' +
+      ", to='" + TO_UTF8.apply(to) + '\'' +
+      ", category='" + TO_UTF8.apply(category) + '\'' +
+      ", operator='" + TO_UTF8.apply(operator) + '\'' +
       '}';
-  }
-
-  public static final class Marshaller implements MessageMarshaller<Train> {
-
-    @Override
-    public Train readFrom(ProtoStreamReader reader) throws IOException {
-      byte[] name = reader.readBytes("name");
-      byte[] to = reader.readBytes("to");
-      byte[] cat = reader.readBytes("cat");
-      byte[] operator = reader.readBytes("operator");
-      return new Train(name, to, cat, operator);
-    }
-
-    @Override
-    public void writeTo(ProtoStreamWriter writer, Train obj) throws IOException {
-      writer.writeBytes("name", obj.name);
-      writer.writeBytes("to", obj.to);
-      writer.writeBytes("cat", obj.cat);
-      writer.writeBytes("operator", obj.operator);
-    }
-
-    @Override
-    public Class<? extends Train> getJavaClass() {
-      return Train.class;
-    }
-
-    @Override
-    public String getTypeName() {
-      return "app.model.Train";
-    }
-
   }
 
 }

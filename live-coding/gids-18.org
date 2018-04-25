@@ -1,0 +1,38 @@
+* Home folders
+** Live coding
+#+BEGIN_SRC shell
+> cd ~/1/streaming-data-kubernetes
+#+END_SRC
+* First time
+** Adjust Docker settings
+- Disable "Start Docker when you log in"
+- Disable "Automatic check for updates"
+- Advanced / CPUs 4 / Memory 8.0 GB
+- Daemon / Insecure Registries / 172.30.0.0/16
+* Pre talk
+** Start Gas Mask
+- Load ~streaming-data-kubernetes-hosts~ file
+- It should contain:
+#+BEGIN_SRC
+127.0.0.1		localhost
+255.255.255.255	broadcasthost
+::1				localhost
+fe80::1%lo0		localhost
+127.0.0.1        app-myproject.127.0.0.1.nip.io
+#+END_SRC
+** Start OpenShift cluster
+#+BEGIN_SRC shell
+> oc37
+> ./setup-local-openshift.sh
+#+END_SRC
+** Deploy all components
+#+BEGIN_SRC shell
+> ./deploy-all.sh
+#+END_SRC
+* Live coding
+** Show logs for injector in OpenShift console
+** Kick off the injector
+It should print contents to standard output
+#+BEGIN_SRC shell
+> curl http://app-myproject.127.0.0.1.nip.io/inject
+#+END_SRC

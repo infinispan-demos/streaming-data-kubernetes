@@ -6,7 +6,7 @@
 {{{cluster}}}
 ** OpenShift master IP address
 {{{ip}}}
-* Home golders
+* Home folders
 ** OpenShifter set up
 #+BEGIN_SRC shell
 ~/0/events/jfokus-18/openshifter
