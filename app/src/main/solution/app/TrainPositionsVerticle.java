@@ -160,7 +160,7 @@ public class TrainPositionsVerticle extends AbstractVerticle {
   }
 
   private Single<Disposable> inject() {
-    final String fileName = "cff_train_position-2016-02-29__.jsonl.gz";
+    final String fileName = "/data/cff_train_position-2016-02-29__.jsonl.gz";
 
     final Disposable disposable =
       trainPositionsMap.clear()

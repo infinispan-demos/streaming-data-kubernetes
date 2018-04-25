@@ -82,7 +82,7 @@ public class StationBoardsVerticle extends AbstractVerticle {
   }
 
   private Single<Disposable> inject() {
-    final String fileName = "cff-stop-2016-02-29__.jsonl.gz";
+    final String fileName = "/data/cff-stop-2016-02-29__.jsonl.gz";
 
     final Disposable disposable =
       stationBoardsMap.clear()

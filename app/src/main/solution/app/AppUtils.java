@@ -16,16 +16,20 @@ import io.vertx.reactivex.ext.web.handler.sockjs.BridgeEvent;
 import io.vertx.reactivex.ext.web.handler.sockjs.SockJSHandler;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.logging.Level.SEVERE;
 
 public class AppUtils {
 
@@ -88,7 +92,7 @@ public class AppUtils {
 
   static Flowable<String> rxReadFile(String resource) {
     Objects.requireNonNull(resource);
-    URL url = StationBoardsVerticle.class.getClassLoader().getResource(resource);
+    URL url = getUrl(resource);
     Objects.requireNonNull(url);
 
     return Flowable
@@ -111,6 +115,15 @@ public class AppUtils {
       )
       .zipWith(throttle(), (item, interval) -> item) // throttle
       .subscribeOn(Schedulers.io());
+  }
+
+  private static URL getUrl(String resource) {
+    try {
+      return new File(resource).toURI().toURL();
+    } catch (MalformedURLException e) {
+      log.log(SEVERE, "Error resolving file URL", e);
+      return null;
+    }
   }
 
   private static Flowable<Long> throttle() {

@@ -16,3 +16,9 @@ oc start-build ${APP} --from-dir=. --follow
 oc new-app ${APP} -l app=${APP} || true
 # || true to make it idempotent
 oc expose service ${APP} || true
+
+oc volume dc/app \
+  --add \
+  --type hostPath \
+  --path /Users/g/1/swiss-transport-binaries \
+  --mount-path=/data || true
