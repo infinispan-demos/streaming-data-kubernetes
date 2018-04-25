@@ -23,7 +23,7 @@ import org.infinispan.protostream.annotations.ProtoMessage;
 import java.util.Date;
 
 @ProtoDoc("@Indexed")
-@ProtoMessage(name = "Stop")
+@ProtoMessage(name = "Stop") // TODO: Optional
 public class Stop {
 
   public Train train;
@@ -48,7 +48,7 @@ public class Stop {
     return train;
   }
 
-  @ProtoDoc("@Field(index = Index.NO, store = Store.NO)")
+  @ProtoDoc("@IndexedField")
   @ProtoField(number = 20, required = true)
   public int getDelayMin() {
     return delayMin;

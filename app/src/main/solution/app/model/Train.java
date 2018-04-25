@@ -20,11 +20,11 @@ import org.infinispan.protostream.annotations.ProtoDoc;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoMessage;
 
+import static app.model.ModelUtils.FROM_UTF8;
 import static app.model.ModelUtils.TO_UTF8;
-import static app.model.ModelUtils.bs;
 
 @ProtoDoc("@Indexed")
-@ProtoMessage(name = "Train")
+@ProtoMessage(name = "Train") // TODO: Optional
 public class Train {
 
   private byte[] name;
@@ -36,10 +36,10 @@ public class Train {
   }
 
   public Train(String name, String to, String category, String operator) {
-    this.name = bs(name);
-    this.to = bs(to);
-    this.category = bs(category);
-    this.operator = bs(operator);
+    this.name = FROM_UTF8.apply(name);
+    this.to = FROM_UTF8.apply(to);
+    this.category = FROM_UTF8.apply(category);
+    this.operator = FROM_UTF8.apply(operator);
   }
 
   @ProtoDoc("@Field(index = Index.NO, store = Store.NO)")
@@ -74,8 +74,8 @@ public class Train {
     this.to = to;
   }
 
-  public void setCategory(byte[] cat) {
-    this.category = cat;
+  public void setCategory(byte[] category) {
+    this.category = category;
   }
 
   public void setOperator(byte[] operator) {

@@ -1,13 +1,11 @@
 package app;
 
 import app.infinispan.InfinispanRxMap;
-import io.reactivex.Single;
+import io.reactivex.Completable;
+import io.reactivex.disposables.Disposable;
 import io.vertx.reactivex.core.AbstractVerticle;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
-import io.vertx.reactivex.ext.web.client.HttpResponse;
-import io.vertx.reactivex.ext.web.client.WebClient;
-import io.vertx.reactivex.ext.web.codec.BodyCodec;
 import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
 
 import java.util.logging.Level;
@@ -19,13 +17,26 @@ public class Main extends AbstractVerticle {
 
   static final Logger log = Logger.getLogger(Main.class.getName());
 
+  private Disposable injector;
+
+  private String stationBoardsVerticleId;
+  private String trainPositionsVerticleId;
+
   @Override
   public void start(io.vertx.core.Future<Void> future) {
     Router router = Router.router(vertx);
     router.get("/test").handler(this::test);
     router.get("/inject").handler(this::inject);
-    router.get("/inject/stop").handler(this::stopInject);
-    router.get("/eventbus/*").handler(AppUtils.sockJSHandler(vertx));
+    router.get("/inject/stop").handler(this::injectStop);
+
+    // Backup in case fully offline and Google Maps not available
+    router.get("/positions").handler(this::positions);
+
+    router.route("/eventbus/delayed-trains/*")
+      .handler(AppUtils.sockJSHandlerAndInject("delayed-trains", vertx));
+
+    router.route("/eventbus/delayed-positions/*")
+      .handler(AppUtils.sockJSHandler("delayed-positions", vertx));
 
     vertx
       .createHttpServer()
@@ -40,40 +51,55 @@ public class Main extends AbstractVerticle {
       );
   }
 
-  private void stopInject(RoutingContext rc) {
-    httpGet("train-positions", "/inject/stop")
-      .subscribe(
-        x -> {
-          vertx.eventBus().publish("injector", "stop");
-          rc.response().end("Injector stopped");
-        }
-        , t -> rc.response().end("Failed to stop injector")
-      );
+  private void positions(RoutingContext rc) {
+    // TODO: Customise this generated block
+    rc.response().end("TODO");
   }
 
   private void inject(RoutingContext rc) {
-    vertx
-      .rxDeployVerticle(Injector.class.getName())
-      .flatMap(x -> httpGet("train-positions", "/inject"))
-      .flatMap(x -> vertx.rxDeployVerticle(Listener.class.getName()))
+    if (injector != null)
+      injector.dispose();
+
+    injector = undeployVerticles()
+      .andThen(vertx.rxDeployVerticle(StationBoardsVerticle.class.getName()))
+      .doOnSuccess(id -> stationBoardsVerticleId = id)
+      .flatMap(x -> vertx.rxDeployVerticle(TrainPositionsVerticle.class.getName()))
+      .doOnSuccess(id -> trainPositionsVerticleId = id)
       .subscribe(
         x ->
-          rc.response().end("Injector and listener started")
+          rc.response().end("Injectors started")
         ,
         failure -> {
-          log.log(Level.SEVERE, "Failure injecting", failure);
-          rc.response().end("Failure: " + failure);
+          log.log(Level.SEVERE, "Failure starting injectors", failure);
+          rc.response().end("Failure starting injectors: " + failure);
         }
       );
   }
 
-  private Single<HttpResponse<String>> httpGet(String host, String uri) {
-    log.info("Call HTTP GET " + host + uri);
-    WebClient client = WebClient.create(vertx);
-    return client
-      .get(8080, host, uri)
-      .as(BodyCodec.string())
-      .rxSend();
+  private Completable undeployVerticles() {
+    return undeployVerticle(stationBoardsVerticleId)
+      .andThen(undeployVerticle(trainPositionsVerticleId))
+      .onErrorComplete();
+  }
+
+  private Completable undeployVerticle(String id) {
+    if (id != null) {
+      log.info("Undeploy verticle with id: " + id);
+      return vertx.rxUndeploy(id);
+    }
+
+    return Completable.complete();
+  }
+
+  private void injectStop(RoutingContext rc) {
+    undeployVerticles()
+      .subscribe(
+        () -> rc.response().end("Injectors stopped")
+        , t -> {
+          log.log(Level.SEVERE, "Failure stopping injectors", t);
+          rc.response().end("Failure stopping injectors: " + t);
+        }
+      );
   }
 
   private void test(RoutingContext rc) {

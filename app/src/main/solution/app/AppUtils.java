@@ -1,68 +1,120 @@
 package app;
 
-import app.model.Station;
-import app.model.Stop;
-import app.model.Train;
+import io.reactivex.Flowable;
+import io.reactivex.Single;
+import io.reactivex.schedulers.Schedulers;
 import io.vertx.core.Handler;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.bridge.PermittedOptions;
 import io.vertx.ext.web.handler.sockjs.BridgeOptions;
-import io.vertx.reactivex.core.Future;
 import io.vertx.reactivex.core.Vertx;
 import io.vertx.reactivex.ext.web.RoutingContext;
+import io.vertx.reactivex.ext.web.client.HttpResponse;
+import io.vertx.reactivex.ext.web.client.WebClient;
+import io.vertx.reactivex.ext.web.codec.BodyCodec;
+import io.vertx.reactivex.ext.web.handler.sockjs.BridgeEvent;
 import io.vertx.reactivex.ext.web.handler.sockjs.SockJSHandler;
-import org.infinispan.client.hotrod.RemoteCache;
-import org.infinispan.client.hotrod.RemoteCacheManager;
-import org.infinispan.client.hotrod.configuration.ConfigurationBuilder;
-import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
-import org.infinispan.protostream.SerializationContext;
-import org.infinispan.protostream.annotations.ProtoSchemaBuilder;
-import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
 
-import java.io.IOException;
+import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.StringWriter;
-import java.util.logging.Level;
+import java.net.URL;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import java.util.zip.GZIPInputStream;
 
-import static org.infinispan.query.remote.client.ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class AppUtils {
 
   static final Logger log = Logger.getLogger(AppUtils.class.getName());
 
-  static Handler<RoutingContext> sockJSHandler(Vertx vertx) {
+  static Handler<RoutingContext> sockJSHandlerAndInject(String address, Vertx vertx) {
     SockJSHandler sockJSHandler = SockJSHandler.create(vertx);
-    PermittedOptions outPermit = new PermittedOptions().setAddress("delayed-trains");
-    BridgeOptions options = new BridgeOptions().addOutboundPermitted(outPermit);
-    sockJSHandler.bridge(options, be -> {
-      if (be.type() == BridgeEventType.REGISTER)
-        log.info("SockJs: client connected");
+    BridgeOptions options = new BridgeOptions();
+    options.addOutboundPermitted(new PermittedOptions().setAddress(address));
 
-      be.complete(true);
+    sockJSHandler.bridge(options, be -> {
+      if (be.type() == BridgeEventType.REGISTER) {
+        log.info("SockJs client connected, start injectors");
+        invokeInjectAndComplete("/inject", vertx, be);
+      } else if (be.type() == BridgeEventType.SOCKET_CLOSED) {
+        invokeInjectAndComplete("/inject/stop", vertx, be);
+      } else {
+        be.complete(true);
+      }
     });
+
     return sockJSHandler;
   }
 
-  private static String readInputStream(InputStream is) {
-    try {
-      try {
-        final Reader reader = new InputStreamReader(is, "UTF-8");
-        StringWriter writer = new StringWriter();
-        char[] buf = new char[1024];
-        int len;
-        while ((len = reader.read(buf)) != -1) {
-          writer.write(buf, 0, len);
+  static Handler<RoutingContext> sockJSHandler(String address, Vertx vertx) {
+    SockJSHandler sockJSHandler = SockJSHandler.create(vertx);
+    BridgeOptions options = new BridgeOptions();
+    options.addOutboundPermitted(new PermittedOptions().setAddress(address));
+    sockJSHandler.bridge(options);
+    return sockJSHandler;
+  }
+
+  private static void invokeInjectAndComplete(
+      String uri
+      , Vertx vertx
+      , BridgeEvent be
+  ) {
+    httpGet("localhost", uri, vertx)
+      .subscribe(
+        reply -> {
+          log.info("HTTP GET replied: " + reply.body());
+          be.complete(true);
         }
-        return writer.toString();
-      } finally {
-        is.close();
-      }
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+        , be::fail
+      );
+  }
+
+  private static Single<HttpResponse<String>> httpGet(
+      String host
+      , String uri
+      , Vertx vertx
+  ) {
+    log.info("Call HTTP GET " + host + uri);
+    WebClient client = WebClient.create(vertx);
+    return client
+      .get(8080, host, uri)
+      .as(BodyCodec.string())
+      .rxSend();
+  }
+
+  static Flowable<String> rxReadFile(String resource) {
+    Objects.requireNonNull(resource);
+    URL url = StationBoardsVerticle.class.getClassLoader().getResource(resource);
+    Objects.requireNonNull(url);
+
+    return Flowable
+      .<String, BufferedReader>generate(
+        () -> {
+          InputStream inputStream = url.openStream();
+          InputStream gzipStream = new GZIPInputStream(inputStream);
+          Reader decoder = new InputStreamReader(gzipStream, UTF_8);
+          return new BufferedReader(decoder);
+        }
+        , (bufferedReader, emitter) -> {
+          String line = bufferedReader.readLine();
+          if (line != null) {
+            emitter.onNext(line);
+          } else {
+            emitter.onComplete();
+          }
+        }
+        , BufferedReader::close
+      )
+      .zipWith(throttle(), (item, interval) -> item) // throttle
+      .subscribeOn(Schedulers.io());
+  }
+
+  private static Flowable<Long> throttle() {
+    return Flowable.interval(5, TimeUnit.MILLISECONDS).onBackpressureDrop();
   }
 
 }

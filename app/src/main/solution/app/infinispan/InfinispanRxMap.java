@@ -22,6 +22,8 @@ public interface InfinispanRxMap<K, V> {
 
   Completable removeContinuousQueries();
 
+  <T> Flowable<T> query(String query, Map<String, Object> queryParams);
+
   Completable clear();
 
   Completable close();

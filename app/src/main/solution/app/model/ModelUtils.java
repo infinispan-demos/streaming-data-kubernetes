@@ -27,8 +27,11 @@ public class ModelUtils {
   public static final Function<byte[], String> TO_UTF8 =
     bs -> Objects.isNull(bs) ? null : new String(bs, CHARSET);
 
-  public static byte[] bs(String s) {
-    return Objects.isNull(s) ? null : s.getBytes(CHARSET);
+  public static final Function<String, byte[]> FROM_UTF8 =
+    s -> Objects.isNull(s) ? null : s.getBytes(CHARSET);
+
+  public static <T> T orNull(Object obj, T defaultValue) {
+    return Objects.isNull(obj) ? defaultValue : (T) obj;
   }
 
 }

@@ -31,7 +31,7 @@ public class WebsocketTask extends Task<Void> {
   }
 
   private void connectHttp() {
-    client.websocket(HTTP_PORT, HTTP_HOST, "/eventbus/websocket", ws -> {
+    client.websocket(HTTP_PORT, HTTP_HOST, "/eventbus/delayed-trains/websocket", ws -> {
       System.out.println("Connected");
       sendPing(ws);
 

@@ -16,6 +16,7 @@ import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryFactory;
 
 import java.util.AbstractMap.SimpleImmutableEntry;
+import java.util.List;
 import java.util.Map;
 
 final class RxMapImpl<K, V> implements InfinispanRxMap<K, V> {
@@ -40,6 +41,7 @@ final class RxMapImpl<K, V> implements InfinispanRxMap<K, V> {
         }
       )
       .toCompletable();
+      // TODO: Add Completable.merge?
   }
 
   @Override
@@ -105,6 +107,25 @@ final class RxMapImpl<K, V> implements InfinispanRxMap<K, V> {
     }
 
     return Completable.complete();
+  }
+
+  @Override
+  public <T> Flowable<T> query(
+      String queryString
+      , Map<String, Object> queryParams
+  ) {
+    final Single<List<T>> queryResultSet = getContext()
+      .rxExecuteBlocking(
+        fut -> {
+          QueryFactory queryFactory = Search.getQueryFactory(cache);
+          Query query = queryFactory.create(queryString);
+          queryParams.forEach(query::setParameter);
+          fut.complete(query.list());
+        }
+      );
+
+    return queryResultSet
+      .flatMapPublisher(Flowable::fromIterable);
   }
 
   @Override

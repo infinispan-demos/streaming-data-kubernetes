@@ -20,11 +20,11 @@ import org.infinispan.protostream.annotations.ProtoDoc;
 import org.infinispan.protostream.annotations.ProtoField;
 import org.infinispan.protostream.annotations.ProtoMessage;
 
+import static app.model.ModelUtils.FROM_UTF8;
 import static app.model.ModelUtils.TO_UTF8;
-import static app.model.ModelUtils.bs;
 
 @ProtoDoc("@Indexed")
-@ProtoMessage(name = "Station")
+@ProtoMessage(name = "Station") // TODO: Optional
 public class Station {
 
   private long id;
@@ -36,7 +36,7 @@ public class Station {
 
   public Station(long id, String name) {
     this.id = id;
-    this.name = bs(name);
+    this.name = FROM_UTF8.apply(name);
   }
 
   @ProtoDoc("@Field(index = Index.NO, store = Store.NO)")
