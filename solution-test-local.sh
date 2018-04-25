@@ -21,7 +21,7 @@ oc process -n ${NS} infinispan-ephemeral -p \
   APPLICATION_PASSWORD=${PASS} | oc create -f -
 
 # Deploy app
-(cd ./app; mvn fabric8:deploy -Psolution)
+(cd ./app; ./solution-deploy.sh)
 
 # TODO: Wait until curl returns success
 
