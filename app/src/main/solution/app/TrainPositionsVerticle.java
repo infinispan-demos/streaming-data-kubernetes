@@ -153,8 +153,8 @@ public class TrainPositionsVerticle extends AbstractVerticle {
 
     return trainPositionsMap
       .<Object[]>query(queryString, queryParams)
-      .map(train -> train[0])
-      .cast(String.class)
+      .map(train -> train[0]) // only interested in first field
+      .cast(String.class) // field is String
       .doOnNext(trainId -> trainNamesToIds.put(trainName, trainId))
       .first("");
   }

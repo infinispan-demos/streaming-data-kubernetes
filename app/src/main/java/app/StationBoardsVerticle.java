@@ -5,6 +5,7 @@ import app.model.Station;
 import app.model.Stop;
 import app.model.Train;
 import io.reactivex.Completable;
+import io.reactivex.Flowable;
 import io.reactivex.Single;
 import io.reactivex.disposables.Disposable;
 import io.vertx.core.json.JsonObject;
@@ -27,6 +28,8 @@ public class StationBoardsVerticle extends AbstractVerticle {
 
   static final Logger log = Logger.getLogger(StationBoardsVerticle.class.getName());
 
+  static final Class[] TO_INDEX = {Train.class, Station.class, Stop.class};
+
   private InfinispanRxMap<String, Stop> stationBoardsMap;
   private Disposable injectorDisposable;
 
@@ -39,21 +42,16 @@ public class StationBoardsVerticle extends AbstractVerticle {
   public void start(io.vertx.core.Future<Void> future) {
     log.info("Start station boards verticle");
 
-    ConfigurationBuilder cfg = new ConfigurationBuilder();
+    final String datagridHost = "datagrid-hotrod";
+    final int datagridPort = 11222;
+    final String mapName = "station-boards";
 
-    cfg
-      .addServer()
-      .host("datagrid-hotrod")
-      .port(11222);
+    // TODO live coding 1.10 - datagrid configuration
+    // ...
 
-    InfinispanRxMap
-      .<String, Stop>createIndexed(
-        "station-boards"
-        , new Class[]{Train.class, Station.class, Stop.class}
-        , cfg
-        , vertx
-      )
-      .doOnSuccess(map -> this.stationBoardsMap = map)
+    // TODO live coding 1.20 - create rx map
+    Single.just("TODO")
+
       .flatMap(x -> addContinuousQuery())
       .doOnSuccess(disposable -> continuousQueryDisposable = disposable)
       .flatMap(x -> inject())
@@ -68,12 +66,18 @@ public class StationBoardsVerticle extends AbstractVerticle {
   }
 
   private Single<Disposable> addContinuousQuery() {
+    final String queryString = "FROM Stop s WHERE s.delayMin > 0";
+    final String publishAddress = "delayed-trains";
+
     final Disposable disposable =
-      stationBoardsMap.continuousQuery("FROM Stop s WHERE s.delayMin > 0")
+
+      // TODO live coding 2.10 - create continuous query
+      Flowable.just("TODO")
+
       .subscribe(
         pair ->
-          vertx.eventBus()
-            .publish("delayed-trains", toJson(pair.getValue()))
+          // TODO live coding 2.20 - publish value as json to eventbus
+          {}
         , t ->
           log.log(Level.SEVERE, "Error adding continuous query", t)
       );
@@ -85,11 +89,18 @@ public class StationBoardsVerticle extends AbstractVerticle {
     final String fileName = "/data/cff-stop-2016-02-29__.jsonl.gz";
 
     final Disposable disposable =
-      stationBoardsMap.clear()
-      .andThen(trackProgress(stationBoardsMap))
+      // TODO live coding 1.30 - clear map and track progress
+      Completable.complete()
+
       .andThen(rxReadFile(fileName))
       .map(StationBoardsVerticle::toEntry)
-      .flatMapCompletable(e -> stationBoardsMap.put(e.getKey(), e.getValue()))
+
+      // TODO live coding 1.40 - call put on map
+      .flatMapCompletable(e -> {
+        log.info("Entry read: " + e);
+        return Completable.complete();
+      })
+
       .subscribe(
         () -> log.info("Reached end")
         , t -> log.log(
@@ -112,30 +123,6 @@ public class StationBoardsVerticle extends AbstractVerticle {
     });
 
     return Completable.complete();
-  }
-
-  @Override
-  public void stop(io.vertx.core.Future<Void> future) {
-    if (progressDisposable != null) {
-      progressDisposable.dispose();
-      vertx.cancelTimer(progressTimer);
-    }
-
-    if (continuousQueryDisposable != null)
-      continuousQueryDisposable.dispose();
-
-    if (injectorDisposable != null)
-      injectorDisposable.dispose();
-
-    stationBoardsMap.removeContinuousQueries()
-      .andThen(stationBoardsMap.close())
-      .subscribe(
-        () -> {
-          log.info("Stopped station boards verticle");
-          future.complete();
-        }
-        , future::fail
-      );
   }
 
   private static Entry<String, Stop> toEntry(String line) {
@@ -175,6 +162,30 @@ public class StationBoardsVerticle extends AbstractVerticle {
     map.put("delay", stop.delayMin);
     map.put("trainName", TO_UTF8.apply(stop.train.getName()));
     return new JsonObject(map).encode();
+  }
+
+  @Override
+  public void stop(io.vertx.core.Future<Void> future) {
+    if (progressDisposable != null) {
+      progressDisposable.dispose();
+      vertx.cancelTimer(progressTimer);
+    }
+
+    if (continuousQueryDisposable != null)
+      continuousQueryDisposable.dispose();
+
+    if (injectorDisposable != null)
+      injectorDisposable.dispose();
+
+    stationBoardsMap.removeContinuousQueries()
+      .andThen(stationBoardsMap.close())
+      .subscribe(
+        () -> {
+          log.info("Stopped station boards verticle");
+          future.complete();
+        }
+        , future::fail
+      );
   }
 
 }

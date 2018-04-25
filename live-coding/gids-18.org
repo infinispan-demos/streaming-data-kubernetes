@@ -30,9 +30,103 @@ fe80::1%lo0		localhost
 > ./deploy-all.sh
 #+END_SRC
 * Live coding
-** Show logs for injector in OpenShift console
-** Kick off the injector
+** Stream -> IO
+*** Show logs for injector in OpenShift console
+*** Kick off the injector
 It should print contents to standard output
 #+BEGIN_SRC shell
 > curl http://app-myproject.127.0.0.1.nip.io/inject
 #+END_SRC
+** Stream -> Infinispan
+*** Create data grid via OpenShift UI
+- Click on ~Select from Project~
+- Click on ~infinispan-ephemeral~
+- Give it these parameters:
+#+BEGIN_SRC shell
+APPLICATION_NAME: datagrid
+MANAGEMENT_USER: developer
+MANAGEMENT_PASSWORD: developer
+NUMBER_OF_INSTANCES: 3
+#+END_SRC
+*** Create datagrid configuration
+#+BEGIN_SRC java
+ConfigurationBuilder cfg = new ConfigurationBuilder();
+cfg.addServer().host(datagridHost).port(datagridPort);
+#+END_SRC
+*** Create indexed InfinispanRxMap
+#+BEGIN_SRC java
+InfinispanRxMap
+  .<String, Stop>createIndexed(mapName, TO_INDEX, cfg, vertx)
+  .doOnSuccess(map -> this.stationBoardsMap = map)
+#+END_SRC
+*** Clear map and track progress
+#+BEGIN_SRC java
+stationBoardsMap.clear()
+  .andThen(trackProgress(stationBoardsMap))
+#+END_SRC
+*** Call put on rx map
+#+BEGIN_SRC java
+.flatMapCompletable(e -> stationBoardsMap.put(e.getKey(), e.getValue()))
+#+END_SRC
+*** Deploy changes
+#+BEGIN_SRC shell
+> cd app
+> mvn compile && oc start-build app --from-dir=. --follow
+#+END_SRC
+*** Show datagrid visualizer while deployment ongoing
+- URL: http://datagrid-visualizer-myproject.127.0.0.1.nip.io/infinispan-visualizer/
+- Select ~station-boards~ caches
+- Not much appearing for now
+*** Start injector
+#+BEGIN_SRC shell
+> curl http://app-myproject.127.0.0.1.nip.io/inject
+#+END_SRC
+*** Show data grid visualizer filling up
+URL: http://datagrid-visualizer-myproject.127.0.0.1.nip.io/infinispan-visualizer/
+** Stream -> Infinispan -> Dashboard
+*** Create continuous query
+#+BEGIN_SRC java
+stationBoardsMap.continuousQuery(queryString)
+#+END_SRC
+*** Publish to event bus
+#+BEGIN_SRC java
+vertx.eventBus().publish(publishAddress, toJson(pair.getValue()))
+#+END_SRC
+*** Deploy changes
+#+BEGIN_SRC shell
+> cd app
+> mvn compile && oc start-build app --from-dir=. --follow
+#+END_SRC
+*** Explain and start dashboard from IDE
+- When the dashboard connects, it also restarts data injection
+- So no need to pre-inject data
+- Run ~dashboard.DelayedDashboard~ class
+*** Close dashboard
+** Stream -> Infinispan -> Map
+*** Add query parameter
+#+BEGIN_SRC java
+queryParams.put("name", trainName);
+#+END_SRC
+*** Create query
+#+BEGIN_SRC java
+trainPositionsMap
+  .<Object[]>query(queryString, queryParams)
+#+END_SRC
+*** Deploy changes
+#+BEGIN_SRC shell
+> cd app
+> mvn compile && oc start-build app --from-dir=. --follow
+#+END_SRC
+*** Start Google Maps web application while deployment ongoing
+#+BEGIN_SRC shell
+> cd web-viewer
+> nvm use 4.2
+> npm start
+#+END_SRC
+*** Show empty Google Maps
+http://localhost:3000
+*** Start dashboard from IDE
+- Run ~dashboard.DelayedDashboard~ class
+- Wait until delayed trains start to appear
+*** Show delayed train positions
+- Initially start in Basel area but then move to Lausanne area

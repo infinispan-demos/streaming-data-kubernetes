@@ -149,12 +149,19 @@ public class TrainPositionsVerticle extends AbstractVerticle {
       "select tp.trainId from TrainPosition tp where trainName = :name";
 
     Map<String, Object> queryParams = new HashMap<>();
-    queryParams.put("name", trainName);
 
-    return trainPositionsMap
-      .<Object[]>query(queryString, queryParams)
-      .map(train -> train[0])
-      .cast(String.class)
+    // TODO live coding 3.10 - set query parameter
+    // ..
+
+    return
+
+      // TODO live coding 3.20 - create query
+      Flowable.just(new Object[]{""})
+//      trainPositionsMap
+//      .<Object[]>query(queryString, queryParams)
+
+      .map(train -> train[0]) // only interested in first field
+      .cast(String.class) // field is String
       .doOnNext(trainId -> trainNamesToIds.put(trainName, trainId))
       .first("");
   }

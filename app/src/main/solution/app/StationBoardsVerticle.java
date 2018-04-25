@@ -27,6 +27,8 @@ public class StationBoardsVerticle extends AbstractVerticle {
 
   static final Logger log = Logger.getLogger(StationBoardsVerticle.class.getName());
 
+  static final Class[] TO_INDEX = {Train.class, Station.class, Stop.class};
+
   private InfinispanRxMap<String, Stop> stationBoardsMap;
   private Disposable injectorDisposable;
 
@@ -39,20 +41,14 @@ public class StationBoardsVerticle extends AbstractVerticle {
   public void start(io.vertx.core.Future<Void> future) {
     log.info("Start station boards verticle");
 
-    ConfigurationBuilder cfg = new ConfigurationBuilder();
+    final String datagridHost = "datagrid-hotrod";
+    final int datagridPort = 11222;
 
-    cfg
-      .addServer()
-      .host("datagrid-hotrod")
-      .port(11222);
+    ConfigurationBuilder cfg = new ConfigurationBuilder();
+    cfg.addServer().host(datagridHost).port(datagridPort);
 
     InfinispanRxMap
-      .<String, Stop>createIndexed(
-        "station-boards"
-        , new Class[]{Train.class, Station.class, Stop.class}
-        , cfg
-        , vertx
-      )
+      .<String, Stop>createIndexed("station-boards", TO_INDEX, cfg, vertx)
       .doOnSuccess(map -> this.stationBoardsMap = map)
       .flatMap(x -> addContinuousQuery())
       .doOnSuccess(disposable -> continuousQueryDisposable = disposable)
@@ -68,12 +64,14 @@ public class StationBoardsVerticle extends AbstractVerticle {
   }
 
   private Single<Disposable> addContinuousQuery() {
+    final String queryString = "FROM Stop s WHERE s.delayMin > 0";
+    final String publishAddress = "delayed-trains";
+
     final Disposable disposable =
-      stationBoardsMap.continuousQuery("FROM Stop s WHERE s.delayMin > 0")
+      stationBoardsMap.continuousQuery(queryString)
       .subscribe(
         pair ->
-          vertx.eventBus()
-            .publish("delayed-trains", toJson(pair.getValue()))
+          vertx.eventBus().publish(publishAddress, toJson(pair.getValue()))
         , t ->
           log.log(Level.SEVERE, "Error adding continuous query", t)
       );
@@ -114,30 +112,6 @@ public class StationBoardsVerticle extends AbstractVerticle {
     return Completable.complete();
   }
 
-  @Override
-  public void stop(io.vertx.core.Future<Void> future) {
-    if (progressDisposable != null) {
-      progressDisposable.dispose();
-      vertx.cancelTimer(progressTimer);
-    }
-
-    if (continuousQueryDisposable != null)
-      continuousQueryDisposable.dispose();
-
-    if (injectorDisposable != null)
-      injectorDisposable.dispose();
-
-    stationBoardsMap.removeContinuousQueries()
-      .andThen(stationBoardsMap.close())
-      .subscribe(
-        () -> {
-          log.info("Stopped station boards verticle");
-          future.complete();
-        }
-        , future::fail
-      );
-  }
-
   private static Entry<String, Stop> toEntry(String line) {
     JsonObject json = new JsonObject(line);
     String trainName = json.getString("name");
@@ -175,6 +149,30 @@ public class StationBoardsVerticle extends AbstractVerticle {
     map.put("delay", stop.delayMin);
     map.put("trainName", TO_UTF8.apply(stop.train.getName()));
     return new JsonObject(map).encode();
+  }
+
+  @Override
+  public void stop(io.vertx.core.Future<Void> future) {
+    if (progressDisposable != null) {
+      progressDisposable.dispose();
+      vertx.cancelTimer(progressTimer);
+    }
+
+    if (continuousQueryDisposable != null)
+      continuousQueryDisposable.dispose();
+
+    if (injectorDisposable != null)
+      injectorDisposable.dispose();
+
+    stationBoardsMap.removeContinuousQueries()
+      .andThen(stationBoardsMap.close())
+      .subscribe(
+        () -> {
+          log.info("Stopped station boards verticle");
+          future.complete();
+        }
+        , future::fail
+      );
   }
 
 }
