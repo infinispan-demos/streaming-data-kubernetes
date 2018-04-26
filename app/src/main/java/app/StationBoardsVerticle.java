@@ -177,15 +177,19 @@ public class StationBoardsVerticle extends AbstractVerticle {
     if (injectorDisposable != null)
       injectorDisposable.dispose();
 
-    stationBoardsMap.removeContinuousQueries()
-      .andThen(stationBoardsMap.close())
-      .subscribe(
-        () -> {
-          log.info("Stopped station boards verticle");
-          future.complete();
-        }
-        , future::fail
-      );
+    if (stationBoardsMap != null) {
+      stationBoardsMap.removeContinuousQueries()
+        .andThen(stationBoardsMap.close())
+        .subscribe(
+          () -> {
+            log.info("Stopped station boards verticle");
+            future.complete();
+          }
+          , future::fail
+        );
+    } else {
+      future.complete();
+    }
   }
 
 }

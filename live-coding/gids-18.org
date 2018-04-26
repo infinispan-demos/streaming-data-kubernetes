@@ -68,6 +68,10 @@ stationBoardsMap.clear()
 #+BEGIN_SRC java
 .flatMapCompletable(e -> stationBoardsMap.put(e.getKey(), e.getValue()))
 #+END_SRC
+*** Change throttle from 1000ms to 5ms
+#+BEGIN_SRC java
+Flowable.interval(5, TimeUnit.MILLISECONDS).onBackpressureDrop();
+#+END_SRC
 *** Deploy changes
 #+BEGIN_SRC shell
 > cd app
