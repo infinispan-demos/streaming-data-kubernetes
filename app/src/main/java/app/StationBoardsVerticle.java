@@ -97,7 +97,7 @@ public class StationBoardsVerticle extends AbstractVerticle {
 
       // TODO live coding 1.40 - call put on map
       .flatMapCompletable(e -> {
-        log.info("Entry read: " + e);
+        log.info("Entry read: " + e.getKey());
         return Completable.complete();
       })
 
