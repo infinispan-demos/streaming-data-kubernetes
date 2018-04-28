@@ -104,7 +104,7 @@ public class TrainPositionsVerticle extends AbstractVerticle {
       .subscribe(
         positions -> {
           log.info("Publishing positions:");
-          log.info(positions);
+          log.info(positions);       
           vertx.eventBus().publish("delayed-positions", positions);
         }
       );
@@ -151,13 +151,11 @@ public class TrainPositionsVerticle extends AbstractVerticle {
     Map<String, Object> queryParams = new HashMap<>();
 
     // TODO live coding 3.10 - set query parameter
-    // ..
+    queryParams.put("name", trainName);
 
     return
-
       // TODO live coding 3.20 - create query
-      Flowable.just(new Object[]{""})
-
+      trainPositionsMap.<Object[]>query(queryString, queryParams)
       .map(train -> train[0]) // only interested in first field
       .cast(String.class) // field is String
       .doOnNext(trainId -> trainNamesToIds.put(trainName, trainId))

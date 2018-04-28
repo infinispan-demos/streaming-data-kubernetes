@@ -128,7 +128,7 @@ public class AppUtils {
 
   private static Flowable<Long> throttle() {
     // TODO live coding 1.50 - change throttle to 5 ms
-    return Flowable.interval(1000, TimeUnit.MILLISECONDS).onBackpressureDrop();
+    return Flowable.interval(5, TimeUnit.MILLISECONDS).onBackpressureDrop();
   }
 
 }

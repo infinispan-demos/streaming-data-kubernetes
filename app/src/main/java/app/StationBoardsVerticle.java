@@ -47,11 +47,13 @@ public class StationBoardsVerticle extends AbstractVerticle {
     final String mapName = "station-boards";
 
     // TODO live coding 1.10 - datagrid configuration
-    // ...
+    ConfigurationBuilder cfg = new ConfigurationBuilder();
+    cfg.addServer().host(datagridHost).port(datagridPort);
 
     // TODO live coding 1.20 - create rx map
-    Single.just("TODO")
-
+    InfinispanRxMap
+      .<String, Stop>createIndexed(mapName, TO_INDEX, cfg, vertx)
+      .doOnSuccess(map -> stationBoardsMap = map)
       .flatMap(x -> addContinuousQuery())
       .doOnSuccess(disposable -> continuousQueryDisposable = disposable)
       .flatMap(x -> inject())
@@ -70,14 +72,12 @@ public class StationBoardsVerticle extends AbstractVerticle {
     final String publishAddress = "delayed-trains";
 
     final Disposable disposable =
-
       // TODO live coding 2.10 - create continuous query
-      Flowable.just("TODO")
-
+      stationBoardsMap.continuousQuery(queryString)
       .subscribe(
         pair ->
           // TODO live coding 2.20 - publish value as json to eventbus
-          {}
+          vertx.eventBus().publish(publishAddress, toJson(pair.getValue()))
         , t ->
           log.log(Level.SEVERE, "Error adding continuous query", t)
       );
@@ -89,18 +89,16 @@ public class StationBoardsVerticle extends AbstractVerticle {
     final String fileName = "/data/cff-stop-2016-02-29__.jsonl.gz";
 
     final Disposable disposable =
-      // TODO live coding 1.30 - clear map and track progress
-      Completable.complete()
+      stationBoardsMap
+        .clear()
+        .andThen(trackProgress(stationBoardsMap))
+        .andThen(rxReadFile(fileName))
+        .map(StationBoardsVerticle::toEntry)
 
-      .andThen(rxReadFile(fileName))
-      .map(StationBoardsVerticle::toEntry)
-
-      // TODO live coding 1.40 - call put on map
-      .flatMapCompletable(e -> {
-        log.info("Entry read: " + e.getKey());
-        return Completable.complete();
-      })
-
+        // TODO live coding 1.40 - call put on map
+      .flatMapCompletable(e ->
+        stationBoardsMap.put(e.getKey(), e.getValue())
+      )
       .subscribe(
         () -> log.info("Reached end")
         , t -> log.log(
