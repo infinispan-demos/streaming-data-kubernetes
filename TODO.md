@@ -4,6 +4,7 @@
 - [ ] Consider using emptyDir and rsync persistent volume when local.
 Might be needed if running inside Minishift.
 Would rsync-ing needed if persistent volume attached to deployment config as opposed to pod?
+- [ ] If running Google or AWS, use cloud storage for binaries
 - [ ] Remove big files and compact repo size.
 Use: [bfg-repo-cleaner](https://rtyley.github.io/bfg-repo-cleaner)
 - Use indexed instead of distributed cache configurations.
