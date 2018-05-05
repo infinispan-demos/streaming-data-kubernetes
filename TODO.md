@@ -23,4 +23,4 @@ We should try to use Hot Rod exclusively.
 - [ ] Inject/store data using REST API, simpler to understand.
 - [ ] Query data using REST API, simpler to understand.
 Keep continuous query API using Java client until there's a REST option
- 
+- [ ] Add stop() to Main verticle 
