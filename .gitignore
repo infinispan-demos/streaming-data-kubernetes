@@ -2,3 +2,6 @@
 *.iml
 
 target
+
+# Binary files
+swiss-transport-binaries

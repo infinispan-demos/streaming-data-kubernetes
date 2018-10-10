@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e -x
+set -e
 
 # TODO Should be deployed to OpenShift and run there
 

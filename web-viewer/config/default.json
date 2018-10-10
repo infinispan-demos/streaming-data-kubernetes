@@ -1,7 +1,7 @@
 {
   "frontend": {
     "url": {
-      "eventbus": "http://app-myproject.127.0.0.1.nip.io/eventbus/delayed-positions",
+      "eventbus": "http://app-myproject.192.168.64.13.nip.io/eventbus/delayed-positions",
       "station_board":"http://-:9000/stationboard"
     },
     "delay":{
