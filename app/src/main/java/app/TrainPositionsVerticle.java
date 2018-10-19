@@ -55,9 +55,9 @@ public class TrainPositionsVerticle extends AbstractVerticle {
       .<String, TrainPosition>createIndexed(
         "train-positions"
         , new Class[] {
-            GeoLocBearing.class
-            , TimedPosition.class
-            , TrainPosition.class
+          GeoLocBearing.class
+          , TimedPosition.class
+          , TrainPosition.class
         }
         , cfg
         , vertx
@@ -104,7 +104,7 @@ public class TrainPositionsVerticle extends AbstractVerticle {
       .subscribe(
         positions -> {
           log.info("Publishing positions:");
-          log.info(positions);       
+          log.info(positions);
           vertx.eventBus().publish("delayed-positions", positions);
         }
       );
@@ -112,8 +112,8 @@ public class TrainPositionsVerticle extends AbstractVerticle {
 
   private Single<String> showTrainPositions() {
     List<Single<String>> trainIdLookups = trainNamesToIds.entrySet().stream()
-        .map(this::getTrainId)
-        .collect(Collectors.toList());
+      .map(this::getTrainId)
+      .collect(Collectors.toList());
 
     return Flowable
       .fromIterable(trainIdLookups)
@@ -135,8 +135,7 @@ public class TrainPositionsVerticle extends AbstractVerticle {
       .map(l ->
         "train_id\ttrain_category\ttrain_name\ttrain_lastStopName\tposition_lat\tposition_lng\tposition_bearing\n"
           + l.stream().collect(Collectors.joining("\n"))
-      )
-    ;
+      );
   }
 
   private Single<String> getTrainId(Map.Entry<String, String> trainEntry) {
@@ -149,13 +148,10 @@ public class TrainPositionsVerticle extends AbstractVerticle {
       "select tp.trainId from TrainPosition tp where trainName = :name";
 
     Map<String, Object> queryParams = new HashMap<>();
-
-    // TODO live coding 3.10 - set query parameter
     queryParams.put("name", trainName);
 
-    return
-      // TODO live coding 3.20 - create query
-      trainPositionsMap.<Object[]>query(queryString, queryParams)
+    return trainPositionsMap
+      .<Object[]>query(queryString, queryParams)
       .map(train -> train[0]) // only interested in first field
       .cast(String.class) // field is String
       .doOnNext(trainId -> trainNamesToIds.put(trainName, trainId))
@@ -214,7 +210,7 @@ public class TrainPositionsVerticle extends AbstractVerticle {
     // TODO: Parse future positions to get continuous move (poly field)
 
     TrainPosition trainPosition =
-        new TrainPosition(trainId, name, delay, cat, lastStopName, current);
+      new TrainPosition(trainId, name, delay, cat, lastStopName, current);
     return new AbstractMap.SimpleImmutableEntry<>(trainId, trainPosition);
   }
 

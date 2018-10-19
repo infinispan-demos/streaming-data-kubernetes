@@ -1,0 +1,35 @@
+* Home folders
+** Live coding
+#+BEGIN_SRC shell
+cd ~/1/streaming-data-kubernetes
+#+END_SRC
+* First time
+** Configure Minishift profile
+#+BEGIN_SRC shell
+ms
+./setup-minishift.sh
+#+END_SRC
+* Pre talk
+#+BEGIN_SRC shell
+ms
+./start-minishift.sh
+eval $(minishift oc-env)
+eval $(minishift docker-env)
+./delete-all.sh
+./run.sh
+#+END_SRC
+* Talk
+** Visualizer
+Switch to 'station-boards' cache.
+Should that is empty initially.
+** Start injector
+#+BEGIN_SRC shell
+curl http://app-myproject.....nip.io/inject
+#+END_SRC
+** Run dashboard
+Modify dashboard config with minishift IP address.
+Run ~dashboard.DelayedDashboard~ class.
+You should see delay trains appearing.
+** Show train map
+Restart delayed dashboard to clear any previous info.
+Show train map in: http://localhost:3000

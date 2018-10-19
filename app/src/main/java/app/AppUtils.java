@@ -24,7 +24,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 
@@ -127,7 +126,6 @@ public class AppUtils {
   }
 
   private static Flowable<Long> throttle() {
-    // TODO live coding 1.50 - change throttle to 5 ms
     return Flowable.interval(5, TimeUnit.MILLISECONDS).onBackpressureDrop();
   }
 

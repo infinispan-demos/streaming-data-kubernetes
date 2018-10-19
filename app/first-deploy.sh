@@ -20,5 +20,5 @@ oc expose service ${APP} || true
 oc volume dc/app \
   --add \
   --type hostPath \
-  --path /Users/g/1/swiss-transport-binaries \
+  --path /mnt/sda1/swiss-transport-binaries \
   --mount-path=/data || true

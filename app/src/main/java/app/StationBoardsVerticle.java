@@ -5,7 +5,6 @@ import app.model.Station;
 import app.model.Stop;
 import app.model.Train;
 import io.reactivex.Completable;
-import io.reactivex.Flowable;
 import io.reactivex.Single;
 import io.reactivex.disposables.Disposable;
 import io.vertx.core.json.JsonObject;
@@ -44,16 +43,13 @@ public class StationBoardsVerticle extends AbstractVerticle {
 
     final String datagridHost = "datagrid-hotrod";
     final int datagridPort = 11222;
-    final String mapName = "station-boards";
 
-    // TODO live coding 1.10 - datagrid configuration
     ConfigurationBuilder cfg = new ConfigurationBuilder();
     cfg.addServer().host(datagridHost).port(datagridPort);
 
-    // TODO live coding 1.20 - create rx map
     InfinispanRxMap
-      .<String, Stop>createIndexed(mapName, TO_INDEX, cfg, vertx)
-      .doOnSuccess(map -> stationBoardsMap = map)
+      .<String, Stop>createIndexed("station-boards", TO_INDEX, cfg, vertx)
+      .doOnSuccess(map -> this.stationBoardsMap = map)
       .flatMap(x -> addContinuousQuery())
       .doOnSuccess(disposable -> continuousQueryDisposable = disposable)
       .flatMap(x -> inject())
@@ -72,15 +68,13 @@ public class StationBoardsVerticle extends AbstractVerticle {
     final String publishAddress = "delayed-trains";
 
     final Disposable disposable =
-      // TODO live coding 2.10 - create continuous query
       stationBoardsMap.continuousQuery(queryString)
-      .subscribe(
-        pair ->
-          // TODO live coding 2.20 - publish value as json to eventbus
-          vertx.eventBus().publish(publishAddress, toJson(pair.getValue()))
-        , t ->
-          log.log(Level.SEVERE, "Error adding continuous query", t)
-      );
+        .subscribe(
+          pair ->
+            vertx.eventBus().publish(publishAddress, toJson(pair.getValue()))
+          , t ->
+            log.log(Level.SEVERE, "Error adding continuous query", t)
+        );
 
     return Single.just(disposable);
   }
@@ -89,24 +83,19 @@ public class StationBoardsVerticle extends AbstractVerticle {
     final String fileName = "/data/cff-stop-2016-02-29__.jsonl.gz";
 
     final Disposable disposable =
-      stationBoardsMap
-        .clear()
+      stationBoardsMap.clear()
         .andThen(trackProgress(stationBoardsMap))
         .andThen(rxReadFile(fileName))
         .map(StationBoardsVerticle::toEntry)
-
-        // TODO live coding 1.40 - call put on map
-      .flatMapCompletable(e ->
-        stationBoardsMap.put(e.getKey(), e.getValue())
-      )
-      .subscribe(
-        () -> log.info("Reached end")
-        , t -> log.log(
-          Level.SEVERE
-          , "Error while loading station boards"
-          , t
-        )
-      );
+        .flatMapCompletable(e -> stationBoardsMap.put(e.getKey(), e.getValue()))
+        .subscribe(
+          () -> log.info("Reached end")
+          , t -> log.log(
+            Level.SEVERE
+            , "Error while loading station boards"
+            , t
+          )
+        );
 
     return Single.just(disposable);
   }
