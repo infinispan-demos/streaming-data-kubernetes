@@ -163,3 +163,11 @@ video NA
 |
 [live demo steps](live-coding/gids-18.org)
 )
+* 20th October 2018 - Voxxed Days Ticino 2018
+(
+[slides](https://speakerdeck.com/galderz/principles-and-patterns-for-streaming-data-analysis)
+|
+video NA
+|
+[live demo steps](live-coding/voxxed-ticino-18.org)
+)

@@ -10,6 +10,7 @@ ms
 ./setup-minishift.sh
 #+END_SRC
 * Pre talk
+** Start datagrid and application
 #+BEGIN_SRC shell
 ms
 ./start-minishift.sh
@@ -18,6 +19,8 @@ eval $(minishift docker-env)
 ./delete-all.sh
 ./run.sh
 #+END_SRC
+** Preload visualizer
+Once script is completed, load visualizer in the browser.
 * Talk
 ** Visualizer
 Switch to 'station-boards' cache.
